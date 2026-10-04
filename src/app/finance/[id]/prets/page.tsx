@@ -1,0 +1,19 @@
+import Link from "next/link";
+import {notFound} from "next/navigation";
+import {db} from "@/lib/db";
+import {pageActor} from "@/lib/session";
+import {loanCase} from "@/lib/loans";
+import {WorkflowError} from "@/lib/workflow";
+import {loanKinds,loanStatuses,loanDataSchema,effectiveLoanFacts} from "@/lib/loan-model";
+import {Shell,Heading} from "@/components/shell";
+import {LoanCreate,LoanEventForm,LoanReview} from "@/components/loan-forms";
+import {LoanSummary,LoanDetails} from "@/components/loan-summary";
+export default async function LoanFollowup({params}:{params:Promise<{id:string}>}){
+ const actor=await pageActor(),{item,loans}=await loanCase(actor.id,(await params).id).catch(e=>{if(e instanceof WorkflowError&&e.status===404)notFound();throw e;});
+ const owner=actor.role==="FINANCE_OFFICER",writable=item.status==="INTERNALLY_VALIDATED";
+ const institutions=owner?await db.financeInstitution.findMany({where:{ownerId:actor.id},select:{id:true,name:true},orderBy:{name:"asc"}}):[];
+ return <Shell name={actor.name} finance={owner} control={actor.role.startsWith("FINANCE_")&&!owner} legal={actor.role==="LEGAL_OFFICER"}><Link className="text-link" href="/finance/prets">← Suivi des prêts</Link><Heading eyebrow={item.reference} title={`Financements · ${item.applicantName}`}/>{!writable&&<p className="feedback">La saisie reprendra après validation interne du dossier.</p>}{owner&&writable&&<section className="panel"><details><summary>Ajouter un prêteur / financement</summary><LoanCreate caseId={item.id} institutions={institutions}/>{!institutions.length&&<Link className="text-link" href="/finance/institutions">Enregistrer l’institution prêteuse</Link>}</details></section>}
+ {!loans.length&&<section className="panel"><h2>Aucun financement enregistré</h2><p>Ajoutez un suivi pour chaque référence communiquée par un prêteur.</p></section>}
+ {loans.map(loan=>{const effective=effectiveLoanFacts(loan.events),closed=effective.some(e=>e.data.kind==="CLOSURE"),pending=loan.events.some(e=>e.status==="PENDING"),corrections=loan.events.filter(e=>e.status==="REJECTED"||effective.some(f=>f.id===e.id));return <section className="panel" key={loan.id}><h2>{loan.institutionName} · {loan.reference}</h2><LoanSummary events={loan.events} currency={loan.currency}/>{owner&&writable&&!closed&&!pending&&<details><summary>Enregistrer un fait ou une correction</summary><LoanEventForm key={loan.version} loanId={loan.id} version={loan.version} corrections={corrections.map(c=>({id:c.id,data:loanDataSchema.parse(c.data)}))}/></details>}{pending&&<p className="muted">Un fait attend le contrôle du contrôleur Finance affecté au dossier.</p>}
+ <h3>Faits et justificatifs</h3>{!loan.events.length&&<p className="muted">Commencez par la décision documentée du prêteur.</p>}{loan.events.map(event=>{const data=loanDataSchema.parse(event.data),replaced=event.status==="ACCEPTED"&&!effective.some(f=>f.id===event.id);return <details key={event.id} id={`fait-${event.id}`} open={event.status==="PENDING"}><summary>{loanKinds[data.kind]} · {data.reference} · {replaced?"Remplacé par une correction":loanStatuses[event.status]}</summary><LoanDetails data={data} currency={loan.currency}/>{event.replacesId&&<p className="muted small"><a className="text-link" href={`#fait-${event.replacesId}`}>Voir la saisie corrigée</a></p>}<a className="text-link" href={`/api/finance/prets/faits/${event.id}`}>Télécharger {event.originalName}</a><p className="muted small">Saisi par {event.authorName} le {event.createdAt.toLocaleString("fr-FR",{timeZone:"Africa/Kinshasa"})}</p>{event.reviewedAt&&<p>Contrôle : {event.reviewerName} · {event.reviewedAt.toLocaleString("fr-FR",{timeZone:"Africa/Kinshasa"})}<br/>{event.reviewReason}</p>}{actor.role==="FINANCE_REVIEWER"&&event.status==="PENDING"&&writable&&<LoanReview id={event.id} version={loan.version}/>}</details>;})}</section>;})}</Shell>;
+}

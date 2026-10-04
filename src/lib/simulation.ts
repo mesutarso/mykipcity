@@ -1,0 +1,10 @@
+import {z} from "zod";
+import {minorUnits,currencies} from "./finance-model";
+const amount=z.string().regex(/^\d{1,12}(\.\d{1,2})?$/);
+export const simulationSchema=z.object({principal:amount,currency:z.enum(currencies),months:z.number().int().min(1).max(600),annualRate:z.string().regex(/^\d{1,3}(\.\d{1,2})?$/).refine(s=>minorUnits(s)<=10000n,"Le taux nominal annuel doit être compris entre 0 et 100 %.").describe("Taux nominal annuel sur capital restant dû"),fees:amount.nullable(),monthlyInsurance:amount.nullable(),source:z.string().trim().min(5).max(500),sourceDate:z.iso.date(),hypothesis:z.string().trim().min(5).max(1000)}).strict();
+export type SimulationInput=z.infer<typeof simulationSchema>;
+const round=(n:bigint,d:bigint)=>(n+d/2n)/d;
+const decimal=(v:bigint)=>`${v/100n}.${String(v%100n).padStart(2,"0")}`;
+export function simulateFinance(input:unknown){const v=simulationSchema.parse(input),p=minorUnits(v.principal);if(p<=0n)throw new Error("Indiquez un capital positif.");const b=minorUnits(v.annualRate),base=120000n,n=BigInt(v.months),power=(base+b)**n;const installment=b===0n?round(p,n):round(p*b*power,base*(power-base**n));let balance=p,totalInterest=0n;const schedule=[];
+ for(let month=1;month<=v.months;month++){const interest=round(balance*b,base);let paid=month===v.months?balance+interest:installment;if(paid>balance+interest)paid=balance+interest;const principal=paid-interest;if(principal<0n)throw new Error("L’arrondi ne couvre pas les intérêts. Réduisez la durée.");balance-=principal;totalInterest+=interest;schedule.push({month,installment:decimal(paid),principal:decimal(principal),interest:decimal(interest),balance:decimal(balance)});}
+ const known=v.fees!==null&&v.monthlyInsurance!==null;return {method:"FIXED_DECLINING_NOMINAL_MONTHLY_V1",currency:v.currency,installment:decimal(installment),interest:decimal(totalInterest),principal:decimal(p),loanTotal:decimal(p+totalInterest),completeCost:known?decimal(p+totalInterest+minorUnits(v.fees!)+minorUnits(v.monthlyInsurance!)*n):null,schedule};}

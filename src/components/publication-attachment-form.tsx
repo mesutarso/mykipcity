@@ -1,0 +1,13 @@
+"use client";
+import { useState,type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+export function PublicationAttachmentUpload({publicationId,version}:{publicationId:string;version:number}){
+ const router=useRouter();const[pending,setPending]=useState(false),[error,setError]=useState("");
+ async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();const form=e.currentTarget,data=new FormData(form);data.set("publicationId",publicationId);data.set("version",String(version));setPending(true);setError("");try{const res=await fetch("/api/publication-attachments/upload",{method:"POST",body:data});const result=await res.json();if(!res.ok)throw new Error(result.error);form.reset();router.refresh();}catch(e){setError(e instanceof Error?e.message:"Dépôt impossible.");}finally{setPending(false);}}
+ return <form className="form-stack" onSubmit={submit}><fieldset disabled={pending} className="form-stack"><label>Photo ou rapport<input name="file" type="file" accept=".jpg,.jpeg,.png,.pdf" required/><span className="hint">JPEG, PNG ou PDF · 8 Mo maximum · 12 fichiers par publication</span></label><label>Légende ou titre du document<input name="caption" required minLength={3} maxLength={300}/></label><label>Date de prise de vue — facultative<input name="takenOn" type="date"/><span className="hint">Pour une photo uniquement. Laissez vide si la date est inconnue.</span></label></fieldset>{error&&<p role="alert" className="feedback error">{error}</p>}<button className="button" disabled={pending}>{pending?"Dépôt…":"Ajouter le fichier"}</button></form>;
+}
+export function PublicationAttachmentRemove({id,version}:{id:string;version:number}){
+ const router=useRouter();const[pending,setPending]=useState(false),[error,setError]=useState("");
+ async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();const reason=new FormData(e.currentTarget).get("reason");setPending(true);setError("");try{const res=await fetch("/api/publication-attachments/remove",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id,version,reason})});const result=await res.json();if(!res.ok)throw new Error(result.error);router.refresh();}catch(e){setError(e instanceof Error?e.message:"Retrait impossible.");}finally{setPending(false);}}
+ return <details className="document-history"><summary>Retirer ce fichier</summary><form className="form-stack" onSubmit={submit}><label>Motif du retrait<input name="reason" required minLength={3} maxLength={1000} disabled={pending}/></label>{error&&<p role="alert" className="feedback error">{error}</p>}<button className="button secondary compact" disabled={pending}>Confirmer le retrait</button></form></details>;
+}

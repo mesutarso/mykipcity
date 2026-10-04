@@ -1,0 +1,2 @@
+import {TwoFactorChallenge} from "@/components/account-recovery";
+export default async function Page(){return <main className="auth-panel" id="main-content"><div className="auth-card"><h1>Vérifier la connexion</h1><TwoFactorChallenge/></div></main>;}

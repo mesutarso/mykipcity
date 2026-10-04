@@ -1,0 +1,9 @@
+import Link from "next/link";
+import {redirect} from "next/navigation";
+import {pageActor} from "@/lib/session";
+import {homeForRole} from "@/lib/roles";
+import {db} from "@/lib/db";
+import {Shell,Heading} from "@/components/shell";
+import {Pagination} from "@/components/pagination";
+const labels:Record<string,string>={name:"Nom",area:"Superficie (m²)",cadastralReference:"Référence cadastrale"};
+export default async function Page({searchParams}:{searchParams:Promise<{page?:string}>}){const actor=await pageActor();if(actor.role!=="ACQUIRER_AGENT")redirect(homeForRole(actor.role));const page=Math.max(1,Math.min(10000,parseInt((await searchParams).page??"1")||1)),where={action:{in:["REGISTRY_CORRECTED","REGISTRY_MERGED","IDENTITY_CORRECTED"]}};const[events,total]=await Promise.all([db.auditEvent.findMany({where,orderBy:{createdAt:"desc"},take:25,skip:(page-1)*25}),db.auditEvent.count({where})]);return <Shell staff name={actor.name}><Link href="/gestion/acquereurs" className="text-link">← Registre des acquéreurs</Link><Heading eyebrow="REGISTRE" title="Historique des corrections"/><section className="panel">{events.map(e=>{const d=JSON.parse(e.detail);return <article className="review-card" key={e.id}><h2>{e.action==="REGISTRY_MERGED"?"Doublon regroupé":e.action==="IDENTITY_CORRECTED"?"Identité rectifiée":"Fiche corrigée"}</h2>{e.action==="REGISTRY_MERGED"?<p>{d.sourceReference} → {d.targetReference}</p>:e.action==="IDENTITY_CORRECTED"?<><p>{d.before} → {d.after}</p><Link className="text-link" href={`/gestion/acquereurs/${e.objectId}`}>Ouvrir le dossier</Link></>:Object.keys(d.after??{}).map(key=><p key={key}>{labels[key]??"Valeur"} : {String(d.before[key])} → {String(d.after[key])}</p>)}<p>{d.reason}</p><small>{d.actorName} · {e.createdAt.toLocaleString("fr-FR",{timeZone:"Africa/Kinshasa"})}</small></article>;})}{!events.length&&<p>Aucune correction enregistrée.</p>}<Pagination page={page} total={total} size={25}/></section></Shell>;}

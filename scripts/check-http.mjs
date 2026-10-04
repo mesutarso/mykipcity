@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+const base='http://127.0.0.1:3200';
+const anonymous=await fetch(base+'/mon-dossier',{redirect:'manual'});
+assert.equal(anonymous.status,307);
+assert.equal(anonymous.headers.get('location'),'/connexion');
+const doc=await fetch(base+'/api/documents/unknown');
+assert.equal(doc.status,401);
+const rejected=await fetch(base+'/api/workflow/save',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://other.invalid'},body:'{}'});
+assert.equal(rejected.status,403);
+console.log('HTTP : dossier anonyme redirigé, document anonyme refusé, origine étrangère refusée.');

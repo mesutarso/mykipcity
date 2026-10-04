@@ -1,0 +1,129 @@
+/* Essentiel + Bureau: shared visual language for member and internal workspaces. */
+:root{--green:#28543c;--green-deep:#203d32;--clay:#5d7658;--paper:#f5f7f5;--ink:#243b33;--muted:#596d60;--border:#dfe6dd;--soft:#eaf0e5;--radius:9px}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+h1{font-family:inherit;font-size:32px;font-weight:600;letter-spacing:-1px;line-height:1.2}
+h2{font-size:19px;font-weight:600;letter-spacing:-.4px}
+.eyebrow{letter-spacing:1.6px;color:#5d7658}
+.brand{font-family:inherit;font-weight:750;letter-spacing:-1px}
+.brand small{font-family:inherit;font-weight:500;letter-spacing:1.8px;color:#bbcec0}
+.brand-mark i:nth-child(2){background:#aec596}
+.sidebar{width:220px;padding:32px 20px;background:#203d32;color:#edf3ee}
+.nav-label{margin:42px 0 15px;color:#b3c5b8}
+.sidebar nav a{padding:12px;font-size:12px;font-weight:500;color:#c8d7cd}
+.sidebar nav a:hover{background:#2b4b3c}
+.sidebar nav a[aria-current="page"]{background:#355748;color:white;font-weight:650}
+.sidebar-bottom{padding-top:30px}
+.sidebar-help{border-top:1px solid #4d6758;padding:20px 4px 0}
+.sidebar-help h3{font-size:13px}.sidebar-help p{font-size:12px;color:#bdcec2;margin:6px 0 12px}
+.sidebar-help a{font-size:12px;font-weight:600;text-decoration:none}
+.workspace{width:calc(100% - 220px)}
+.topbar{height:72px;background:white;padding:0 40px}
+.workspace-label{font-size:12px;color:var(--muted)}
+.account{gap:12px}.avatar{font-family:inherit;font-size:13px;background:#e9eee5}
+.logout{font-size:11px;text-decoration:none;padding:7px 0}.logout:hover{text-decoration:underline}
+.workspace main{padding:32px 40px;min-height:calc(100vh - 130px)}
+.page-heading{margin-bottom:26px}.page-heading .muted{margin-top:8px}
+.button{padding:11px 16px;font-size:12px;border-radius:6px;gap:8px}
+.panel{padding:24px}.status{font-size:11px;padding:4px 10px;font-weight:500}
+.status:before{display:none}.status.positive{background:#e9f1e9;color:#306643}
+.section-title{margin:0 0 16px}.section-title .eyebrow{margin-bottom:7px}
+.registry-row{padding:20px 0}.registry-identity h3{font-size:15px}
+input,select,textarea{border-color:#d4ded3}.filters{gap:12px}
+.stats strong{font-family:inherit;font-weight:550;font-size:30px}
+.finance-tabs{gap:4px}.finance-tabs a{font-size:13px;padding:12px 15px}
+.finance-tabs a[aria-current]{border-bottom-width:2px}
+.app-footer{border:0;font-size:10px}
+.dossier-summary{display:flex;align-items:center;justify-content:space-between;gap:22px;padding:23px 25px;background:#eaf0e5;border:1px solid #dce5d6;border-radius:9px;margin-bottom:30px}
+.dossier-summary h2{font-size:17px;margin-bottom:7px}.dossier-summary .eyebrow{font-size:9px;margin-bottom:7px;color:#805033}
+.dossier-summary p.muted{font-size:12px;max-width:620px}
+.dossier-summary .button{align-self:center;flex-shrink:0}
+.member-columns{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:28px}
+.member-main{display:flex;flex-direction:column;gap:28px;min-width:0}
+.member-parcels{background:white;border:1px solid var(--border);border-radius:9px;overflow:hidden}
+.member-parcels>.empty-text{padding:20px}
+.member-parcel{display:flex;justify-content:space-between;align-items:start;gap:16px;padding:20px;border-bottom:1px solid var(--border)}
+.member-parcel:last-child{border:0}.member-parcel>div:first-child{min-width:0;overflow-wrap:anywhere}
+.member-parcel p{margin-top:5px}.parcel-actions{display:flex;flex-direction:column;align-items:end;gap:9px;flex-shrink:0}
+.parcel-reason{color:var(--muted);white-space:pre-wrap}
+.home-parcel-filter{margin:0 0 14px;align-items:end}.home-parcel-filter label:first-child{min-width:0}
+.home-parcel-filter label{font-size:11px}.home-parcel-filter select{padding:8px 10px}
+.home-shortcuts{display:flex;flex-wrap:wrap;gap:12px 22px;border-top:1px solid var(--border);padding-top:18px;margin-top:16px}
+.personal-publications,.news-publications{padding:20px}
+.member-home .publication-card{padding:20px 0}.member-home .publication-card:first-child{padding-top:0}
+.member-home .publication-card h3{font-size:16px;line-height:1.4;letter-spacing:-.2px}
+.member-home .publication-card .eyebrow{font-size:9px}.member-home .publication-body{font-size:13px;line-height:1.6;margin:12px 0}
+.member-home .publication-photo{max-height:220px;object-fit:contain;border-radius:6px}
+.member-news{min-width:0}.news-publications>.text-link{margin-top:16px}
+.member-activity{margin-top:32px}.timeline li{font-size:12px;padding:14px 0}
+.finance-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin:0 0 28px}
+.finance-overview article{padding:20px 22px;background:#fff;border:1px solid var(--border);border-radius:9px}
+.finance-overview span{display:block;color:var(--muted);font-size:12px}
+.finance-overview strong{display:block;font-size:30px;font-weight:550;margin-top:5px}
+.finance-results{padding:0;overflow:hidden}.finance-results .filters{padding:22px 22px 0;margin-bottom:20px}
+.finance-results .results-heading{font-size:15px;padding:0 22px 18px;margin:0}
+.table-scroll{overflow-x:auto}table.case-table{width:100%;border-collapse:collapse;text-align:left}
+.case-table th{background:#f6f8f4;color:var(--muted);font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.case-table td,.case-table th{padding:17px 22px;border-top:1px solid var(--border)}
+.case-table td{font-size:12px;vertical-align:middle}.case-table small{display:block;color:var(--muted);margin-top:5px}
+.case-table .text-link{white-space:nowrap}.case-table .case-name{font-size:13px;font-weight:600;text-decoration:none;overflow-wrap:anywhere}
+.finance-results>.actions{padding:18px 22px}.finance-results>.empty-text{padding:22px}
+.auth-intro h1{font-family:inherit;font-size:56px;font-weight:600;letter-spacing:-2px}
+.auth-card h2{font-family:inherit;font-weight:600;font-size:30px}
+@media(min-width:1500px){.workspace main{padding:36px 48px}}
+@media(max-width:1100px){.sidebar{width:205px;padding:28px 16px}.workspace{width:calc(100% - 205px)}.workspace main{padding:28px}.topbar{padding:0 28px}.member-columns{grid-template-columns:minmax(0,1fr)}.dossier-summary{flex-wrap:wrap}.dossier-summary .button{align-self:start}.member-news .publication-photo{max-height:320px}}
+@media(max-width:760px){
+ .sidebar{width:100%;height:auto;padding:22px 18px}.sidebar nav{margin-top:20px;gap:5px}.sidebar nav a{font-size:12px;padding:11px 10px}.sidebar nav a[aria-current="page"]{box-shadow:none}
+ .workspace{width:100%}.workspace main{padding:25px 18px}.topbar{height:auto;min-height:64px;padding:12px 18px}.workspace-label{display:none}.account{width:100%;gap:10px}.account>span:not(.avatar){margin-right:auto;overflow-wrap:anywhere;min-width:0}.account .text-link{font-size:11px}
+ h1{font-size:29px}h2{font-size:18px}.page-heading{gap:16px}.page-heading .muted{font-size:13px}
+ .dossier-summary{padding:20px;flex-direction:column;align-items:start;gap:17px;margin-bottom:26px}.dossier-summary .button{align-self:start}
+ .member-columns{gap:26px}.member-main{gap:26px}.member-parcel{padding:17px 15px;gap:10px}.member-parcel h3{font-size:14px}.member-parcel .status{font-size:10px;padding:4px 8px}.parcel-actions .text-link{font-size:11px}
+ .home-parcel-filter{flex-wrap:nowrap;gap:10px}.home-parcel-filter label{width:auto}.home-parcel-filter .button{flex-shrink:0}
+ .personal-publications,.news-publications{padding:18px}.member-activity{margin-top:26px}.member-activity .section-title{gap:12px}.timeline li{gap:5px}
+ .finance-overview{gap:8px;margin-bottom:24px}.finance-overview article{padding:14px 10px}.finance-overview span{font-size:10px;min-height:32px}.finance-overview strong{font-size:26px}
+ .finance-results .filters{padding:18px 18px 0}.finance-results .results-heading{padding-left:18px}.case-table td,.case-table th{padding:14px 18px}.case-table{min-width:650px}.finance-results>.actions{padding:16px 18px}
+ .auth-intro h1{font-size:40px;letter-spacing:-1.3px}.auth-card h2{font-size:28px}
+}
+.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+.document-reminder{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;background:#fff8ea;border:1px solid #e8d9b8;padding:15px 20px;border-radius:8px;margin:-12px 0 28px;font-size:12px;color:#705323}
+.member-columns:not(:has(.member-news)){grid-template-columns:minmax(0,1fr)}
+.notification-count{display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:50%;background:var(--soft);padding:0 5px;font-size:10px}
+.notification-filters{margin-bottom:22px}.notification-row{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:20px 12px;border-bottom:1px solid var(--border)}.notification-row:last-child{border:0}.notification-row.unread{border-left:3px solid var(--green);background:#f6f9f3}.notification-row a{text-decoration:none;font-weight:600}.notification-row p{margin-top:6px}.notification-row>div:first-child{min-width:0;overflow-wrap:anywhere}
+.conversation-layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px;align-items:start}.message h3{margin-bottom:8px}.message .text-link{margin-top:12px}.message .small:last-child{margin-top:12px}
+@media(max-width:1050px){.conversation-layout{grid-template-columns:1fr}}@media(max-width:760px){.notification-row{align-items:start;flex-direction:column;gap:12px}.account{row-gap:8px}.account>.text-link:first-child{margin-right:auto}.account>span:not(.avatar){margin-right:0}}
+.dossier-section{border:1px solid var(--border);border-radius:8px;padding:16px 18px;background:#fff}.dossier-section>summary{cursor:pointer;font-weight:600;font-size:14px}.dossier-section[open]>summary{margin-bottom:20px}.dossier-section details>summary{font-size:12px;cursor:pointer}.member-finance-documents{margin-top:30px}
+
+.contract-file-order { list-style: none; padding: 0; display: grid; gap: .75rem; }
+.contract-file-order li { border: 1px solid var(--border, #dce3df); border-radius: .5rem; padding: .75rem; display: grid; gap: .5rem; }
+.contract-file-order li > span { overflow-wrap: anywhere; }
+.document-list .review-card h3 { overflow-wrap: anywhere; }
+
+.version-comparison { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;align-items:start; }
+.version-comparison .panel > div { margin-top:1rem;padding:.8rem;overflow-wrap:anywhere; }
+.version-changed { border-left:3px solid #b67a13;background:#fffaed;border-radius:.25rem; }
+@media(max-width:760px){.version-comparison{grid-template-columns:1fr;}}
+
+/* Mobile navigation uses the shared shadcn Sheet. */
+.mobile-navigation{display:none}
+.mobile-menu-panel{width:min(340px,88vw)!important;max-height:100dvh;gap:8px}
+.mobile-menu-panel [data-slot="sheet-header"]{padding:28px 56px 20px 24px}
+.mobile-menu-panel [data-slot="sheet-title"]{font-size:20px;line-height:1.35}
+.mobile-menu-panel [data-slot="sheet-description"]{margin-top:8px;overflow-wrap:anywhere}
+.mobile-menu-scroll{overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;flex:1;min-height:0;padding:0 16px 24px}
+.mobile-menu-panel nav{display:flex;flex-direction:column;gap:6px}
+.mobile-menu-panel nav a{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;padding:12px;border-radius:8px;text-decoration:none;font-size:14px;color:var(--ink)}
+.mobile-menu-panel nav a:hover{background:var(--soft)}
+.mobile-menu-panel nav a[aria-current="page"]{background:var(--green);color:white;font-weight:600}
+.mobile-account-nav{margin-top:28px;padding-top:20px;border-top:1px solid var(--border)}
+.mobile-menu-footer{display:flex;flex-direction:column;align-items:start;gap:22px;margin-top:auto;padding:28px 12px 0}
+.mobile-menu-footer a{font-size:13px;text-decoration:none;color:var(--muted)}
+.mobile-menu-footer .logout{padding:10px 0;font-size:13px}
+@media(max-width:760px){
+ .app-shell>.sidebar{display:none}
+ .topbar>.workspace-label,.topbar>.account{display:none}
+ .mobile-navigation{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%}
+ .mobile-navigation .brand{font-size:22px;color:var(--green-deep)}
+ .mobile-navigation .brand small{color:var(--muted)}
+ .mobile-navigation [data-slot="sheet-trigger"]{min-height:44px;padding:10px 14px}
+ .topbar{min-height:76px;padding:14px 18px}
+}

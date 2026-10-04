@@ -1,0 +1,8 @@
+import {redirect} from "next/navigation";
+import {db} from "@/lib/db";
+import {pageActor} from "@/lib/session";
+import {homeForRole} from "@/lib/roles";
+import {Shell,Heading} from "@/components/shell";
+import {LegalAssignmentForm} from "@/components/legal-assignment-form";
+import {Pagination} from "@/components/pagination";
+export default async function Page({searchParams}:{searchParams:Promise<{page?:string;q?:string}>}){const actor=await pageActor();if(actor.role!=="ADMIN")redirect(homeForRole(actor.role));const params=await searchParams,q=(params.q??"").slice(0,120),page=Math.max(1,Math.min(10000,parseInt(params.page??"1")||1)),where={reference:{contains:q}};const [items,total,choices]=await Promise.all([db.financeCase.findMany({where,select:{id:true,reference:true,version:true,legalOfficerId:true},orderBy:{updatedAt:"desc"},take:20,skip:(page-1)*20}),db.financeCase.count({where}),db.user.findMany({where:{role:"LEGAL_OFFICER",active:true},select:{id:true,name:true}})]);return <Shell admin name={actor.name}><Heading eyebrow="ADMINISTRATION" title="Affectations au Cabinet"/><section className="panel"><form className="filters"><label>Référence<input name="q" defaultValue={q}/></label><button className="button">Rechercher</button></form>{items.map(i=><article key={`${i.id}-${i.version}`} className="review-card"><h2>{i.reference}</h2><p>{choices.find(c=>c.id===i.legalOfficerId)?.name??"Aucun intervenant actif affecté"}</p><LegalAssignmentForm id={i.id} version={i.version} choices={choices.filter(c=>c.id!==i.legalOfficerId)}/></article>)}<Pagination page={page} total={total} params={{q}}/></section></Shell>;}

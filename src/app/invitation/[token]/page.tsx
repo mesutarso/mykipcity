@@ -1,0 +1,4 @@
+import { invitationInfo } from "@/lib/workflow";
+import { ActivationForm } from "@/components/forms";
+import { Brand } from "@/components/shell";
+export default async function Invitation({params}:{params:Promise<{token:string}>}){const {token}=await params;const invite=await invitationInfo(token);return <main id="main-content" className="standalone"><Brand/><section className="panel invitation-panel"><p className="eyebrow">INVITATION PERSONNELLE</p><h1>{invite?"Créons votre espace.":"Ce lien n’est plus disponible."}</h1>{invite?<><p className="muted">Votre compte vous permettra de préparer votre dossier. Les accès aux parcelles seront ouverts après vérification par l’équipe.</p><ActivationForm token={token} email={invite.email}/></>:<><p className="muted">Cette invitation a expiré, a été révoquée ou a déjà servi. Si votre compte est créé, vous pouvez vous connecter.</p><a className="button" href="/connexion">Accéder à la connexion</a></>}</section></main>;}

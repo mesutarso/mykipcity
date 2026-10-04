@@ -1,0 +1,8 @@
+import Link from "next/link";
+import {redirect} from "next/navigation";
+import {pageActor} from "@/lib/session";
+import {homeForRole} from "@/lib/roles";
+import {db} from "@/lib/db";
+import {Shell,Heading} from "@/components/shell";
+import {ImportPreviewForm} from "@/components/registry-import-forms";
+export default async function Imports(){const actor=await pageActor();if(actor.role!=="ACQUIRER_AGENT")redirect(homeForRole(actor.role));const imports=await db.registryImport.findMany({where:{actorId:actor.id},orderBy:{createdAt:"desc"},take:30,select:{id:true,filename:true,status:true,kind:true,createdAt:true,expiresAt:true}});return <Shell name={actor.name} staff><Link className="text-link" href="/gestion/acquereurs">← Registre acquéreurs</Link><Heading title="Importer le registre" eyebrow="ACQUÉREURS ET PARCELLES"/><section className="panel"><h2>Préparer un import</h2><p>Vérifiez chaque ligne avant confirmation. Les fiches existantes sont conservées et les conflits doivent être corrigés dans le fichier.</p><ImportPreviewForm/></section><section className="panel"><h2>Mes 30 derniers imports</h2>{imports.map(i=><article key={i.id} className="registry-row"><div><h3>{i.filename}</h3><p>{i.kind==="ACQUIRERS"?"Acquéreurs":"Parcelles"} · {i.createdAt.toLocaleString("fr-FR",{timeZone:"Africa/Kinshasa"})}</p><span className="status">{i.status==="COMPLETED"?"Import terminé":i.expiresAt<=new Date()?"Aperçu expiré":"À vérifier"}</span></div><Link className="text-link" href={`/gestion/imports/${i.id}`}>Consulter →</Link></article>)}{!imports.length&&<p>Aucun import préparé.</p>}</section></Shell>;}

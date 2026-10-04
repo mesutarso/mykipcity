@@ -1,0 +1,6 @@
+ALTER TABLE "FinanceCase" ADD COLUMN "legalOfficerId" TEXT;
+CREATE TABLE "LegalRecord" ("id" TEXT NOT NULL PRIMARY KEY,"caseId" TEXT NOT NULL,"code" TEXT NOT NULL,"title" TEXT NOT NULL,"version" INTEGER NOT NULL DEFAULT 1,"status" TEXT NOT NULL DEFAULT 'DRAFT',"authorId" TEXT NOT NULL,"reviewerId" TEXT,"data" JSONB NOT NULL,"createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,"updatedAt" DATETIME NOT NULL,CONSTRAINT "LegalRecord_caseId_fkey" FOREIGN KEY ("caseId") REFERENCES "FinanceCase"("id") ON DELETE RESTRICT ON UPDATE CASCADE);
+CREATE INDEX "LegalRecord_caseId_updatedAt_idx" ON "LegalRecord"("caseId","updatedAt");
+CREATE TABLE "LegalRevision" ("id" TEXT NOT NULL PRIMARY KEY,"recordId" TEXT NOT NULL,"version" INTEGER NOT NULL,"action" TEXT NOT NULL,"actorId" TEXT NOT NULL,"actorName" TEXT NOT NULL,"actorPersonId" TEXT NOT NULL,"reason" TEXT NOT NULL,"data" JSONB NOT NULL,"createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "LegalRevision_recordId_fkey" FOREIGN KEY ("recordId") REFERENCES "LegalRecord"("id") ON DELETE RESTRICT ON UPDATE CASCADE);
+CREATE UNIQUE INDEX "LegalRevision_recordId_version_key" ON "LegalRevision"("recordId","version");
+ALTER TABLE "LegalRecord" ADD COLUMN "reviewPart" INTEGER NOT NULL DEFAULT 1;

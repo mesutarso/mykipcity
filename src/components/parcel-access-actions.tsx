@@ -1,0 +1,10 @@
+"use client";
+import {useState,type FormEvent} from "react";
+import {useRouter} from "next/navigation";
+import {ParcelAccessFields,readAccessForm,type AccessProof} from "./parcel-access-fields";
+import type {AccessVerification} from "@/lib/parcel-access-model";
+export function ParcelAccessActions({id,version,quality,proofs,revoked}:{id:string;version:number;quality:AccessVerification["quality"];proofs:AccessProof[];revoked:boolean}){
+ const router=useRouter();const[error,setError]=useState(""),[pending,setPending]=useState(false),[action,setAction]=useState(revoked?"RENEW":"REVOKE");
+ async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();const data=new FormData(e.currentTarget);setPending(true);setError("");try{const r=await fetch("/api/workflow/parcel-access",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id,version,action,reason:data.get("reason"),...(action==="RENEW"?{access:readAccessForm(data,quality)}:{})})});const result=await r.json();if(!r.ok)throw new Error(result.error??"Action impossible.");router.refresh();}catch(e){setError(e instanceof Error?e.message:"Action impossible.");}finally{setPending(false);}}
+ return <details><summary>Gérer les droits d’accès</summary><form className="form-stack" onSubmit={submit}><fieldset disabled={pending}><label>Action<select value={action} onChange={e=>setAction(e.target.value)}>{!revoked&&<option value="REVOKE">Retirer l’accès à cette parcelle</option>}<option value="REEXAMINE">Demander une correction du titulaire ou de sa qualité</option><option value="RENEW">Réexaminer et renouveler les droits</option></select></label>{action==="REEXAMINE"&&<p>Les accès liés à ce rattachement seront suspendus. L’acquéreur corrigera sa déclaration avant un nouvel examen.</p>}{action==="RENEW"&&<ParcelAccessFields quality={quality} proofs={proofs}/>}<label>Motif<textarea name="reason" minLength={10} maxLength={1000} required rows={3}/></label></fieldset>{error&&<p className="feedback error" role="alert">{error}</p>}<button className="button" disabled={pending}>{pending?"Enregistrement…":"Enregistrer la décision"}</button></form></details>;
+}

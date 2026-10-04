@@ -1,0 +1,706 @@
+generator client {
+  provider = "prisma-client"
+  output = "../src/generated/prisma"
+}
+datasource db {
+  provider = "sqlite"
+}
+model User {
+  selectedFileId String?
+  mergedIntoUserId String?
+  twoFactorEnabled Boolean @default(false)
+  twoFactors TwoFactor[]
+  id String @id
+  name String
+  email String @unique
+  emailVerified Boolean @default(false)
+  image String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  personId String
+  role String @default("ACQUIRER")
+  active Boolean @default(true)
+  accessVersion Int @default(0)
+  financeCases FinanceCase[] @relation("FinanceOwner")
+  institutions FinanceInstitution[]
+  financeRevisions FinanceRevision[] @relation("FinanceAuthor")
+  messages Message[]
+  sessions Session[]
+  accounts Account[]
+  acquirers Acquirer[]
+  @@index([personId])
+}
+model Session {
+  id String @id
+  expiresAt DateTime
+  token String @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+}
+model Account {
+  id String @id
+  accountId String
+  providerId String
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken String?
+  refreshToken String?
+  idToken String?
+  accessTokenExpiresAt DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope String?
+  password String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+model Verification {
+  id String @id
+  identifier String
+  value String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([identifier])
+}
+model Acquirer {
+  registryVersion Int @default(0)
+  mergedIntoId String?
+  id String @id @default(cuid())
+  reference String @unique
+  registeredName String
+  email String @unique
+  personId String @unique
+  userId String?
+  user User? @relation(fields: [userId], references: [id])
+  @@index([userId])
+  file AcquirerFile?
+  invitations Invitation[]
+  financeCases FinanceCase[]
+  createdAt DateTime @default(now())
+}
+model Invitation {
+  id String @id @default(cuid())
+  tokenHash String @unique
+  acquirerId String
+  acquirer Acquirer @relation(fields: [acquirerId], references: [id])
+  email String
+  expiresAt DateTime
+  consumedAt DateTime?
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([acquirerId])
+}
+model AcquirerFile {
+  contactOwnerId String?
+  contactVersion Int @default(0)
+  details Json?
+  id String @id @default(cuid())
+  acquirerId String @unique
+  acquirer Acquirer @relation(fields: [acquirerId], references: [id])
+  fullName String @default("")
+  phone String @default("")
+  city String @default("")
+  country String @default("")
+  status String @default("DRAFT")
+  version Int @default(0)
+  submittedAt DateTime?
+  updatedAt DateTime @updatedAt
+  declarations ParcelDeclaration[]
+  memberDocuments MemberDocument[]
+  documents Document[]
+  messages Message[]
+}
+model Parcel {
+  registryVersion Int @default(0)
+  id String @id @default(cuid())
+  reference String @unique
+  area Int
+  cadastralReference String
+  declarations ParcelDeclaration[]
+}
+model ParcelDeclaration {
+  accessVerification Json?
+  accessExpiresAt DateTime?
+  accessRevokedAt DateTime?
+  details Json?
+  id String @id @default(cuid())
+  fileId String
+  file AcquirerFile @relation(fields: [fileId], references: [id])
+  reference String
+  contractNumber String
+  parcelId String?
+  parcel Parcel? @relation(fields: [parcelId], references: [id])
+  status String @default("PENDING")
+  reason String @default("")
+  reviewedBy String?
+  reviewedAt DateTime?
+  @@unique([fileId, reference])
+}
+model Document {
+  groupId String?
+  revision Int @default(1)
+  page Int @default(1)
+  isCurrent Boolean @default(true)
+  batchId String?
+  batchHash String?
+  @@unique([groupId, revision, page])
+  @@unique([batchId, page])
+  details Json?
+  id String @id @default(cuid())
+  fileId String
+  file AcquirerFile @relation(fields: [fileId], references: [id])
+  originalName String
+  storageKey String @unique
+  mimeType String
+  size Int
+  sha256 String
+  status String @default("MANUAL_REVIEW")
+  createdAt DateTime @default(now())
+  @@index([fileId])
+}
+model AuditEvent {
+  id String @id @default(cuid())
+  actorId String
+  action String
+  objectId String
+  detail String @default("")
+  createdAt DateTime @default(now())
+  @@index([objectId, createdAt])
+}
+model OutboxEvent {
+  id String @id @default(cuid())
+  type String
+  recipient String
+  objectId String
+  status String @default("DEMO_ONLY")
+  createdAt DateTime @default(now())
+}
+
+model Message {
+  uploadName String?
+  uploadMime String?
+  uploadSize Int?
+  uploadSha256 String?
+  uploadStorageKey String? @unique
+  subject String @default("")
+  parcelReference String @default("")
+  attachmentId String?
+  clientToken String?
+  @@unique([authorId, clientToken])
+  id String @id @default(cuid())
+  fileId String
+  file AcquirerFile @relation(fields: [fileId], references: [id])
+  authorId String
+  author User @relation(fields: [authorId], references: [id])
+  body String
+  createdAt DateTime @default(now())
+  @@index([fileId, createdAt])
+}
+
+model FinanceCase {
+  originals Original[]
+  loans Loan[]
+  legalOfficerId String?
+  legalRecords LegalRecord[]
+  id String @id @default(cuid())
+  reference String @unique
+  acquirerId String?
+  acquirer Acquirer? @relation(fields: [acquirerId], references: [id])
+  reviewerId String?
+  validatorId String?
+  reviewCycle Int @default(0)
+  ownerId String
+  owner User @relation("FinanceOwner", fields: [ownerId], references: [id])
+  applicantName String
+  pathway String
+  status String @default("DRAFT")
+  version Int @default(1)
+  request Json
+  budget Json?
+  opportunity Json?
+  reopeningRequestId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  revisions FinanceRevision[]
+  requirements FinanceRequirement[]
+  offers FinanceOffer[]
+  authorizations FinanceAuthorization[]
+  memberUpdate FinanceMemberUpdate?
+  @@index([ownerId, updatedAt])
+}
+
+model Loan {
+  id String @id @default(cuid())
+  caseId String
+  case FinanceCase @relation(fields: [caseId], references: [id])
+  institutionId String
+  institutionName String
+  reference String
+  currency String
+  version Int @default(1)
+  createdAt DateTime @default(now())
+  events LoanEvent[]
+  @@unique([caseId, institutionId, reference])
+}
+
+model LoanEvent {
+  id String @id @default(cuid())
+  loanId String
+  loan Loan @relation(fields: [loanId], references: [id])
+  kind String
+  status String @default("PENDING")
+  replacesId String?
+  data Json
+  authorId String
+  authorName String
+  authorPersonId String
+  createdAt DateTime @default(now())
+  reviewerId String?
+  reviewerName String?
+  reviewerPersonId String?
+  reviewedAt DateTime?
+  reviewReason String?
+  originalName String
+  storageKey String @unique
+  mimeType String
+  size Int
+  sha256 String
+  @@index([loanId, createdAt])
+}
+model FinanceRevision {
+  id String @id @default(cuid())
+  caseId String
+  case FinanceCase @relation(fields: [caseId], references: [id])
+  version Int
+  code String
+  templateVersion String @default("V2_DRAFT")
+  payload Json
+  actorId String
+  actor User @relation("FinanceAuthor", fields: [actorId], references: [id])
+  createdAt DateTime @default(now())
+  @@unique([caseId, version])
+}
+
+model FinanceRequirement {
+  sharingVersion Int @default(0)
+  memberAudienceId String?
+  memberInstructions String @default("")
+  sharedAt DateTime?
+  id String @id @default(cuid())
+  caseId String
+  case FinanceCase @relation(fields: [caseId], references: [id])
+  category String
+  label String
+  version Int @default(0)
+  createdAt DateTime @default(now())
+  documents FinanceDocument[]
+  @@index([caseId])
+}
+model FinanceDocument {
+  id String @id @default(cuid())
+  requirementId String
+  requirement FinanceRequirement @relation(fields: [requirementId], references: [id])
+  revision Int
+  originalName String
+  storageKey String @unique
+  mimeType String
+  size Int
+  sha256 String
+  status String @default("PENDING")
+  reason String @default("")
+  uploadedBy String
+  reviewedBy String?
+  reviewedAt DateTime?
+  createdAt DateTime @default(now())
+  @@unique([requirementId, revision])
+}
+
+model FinanceInstitution {
+  id String @id @default(cuid())
+  ownerId String
+  owner User @relation(fields: [ownerId], references: [id])
+  identityKey String
+  name String
+  branch String
+  contactName String
+  contactRole String
+  email String
+  phone String
+  address String
+  notes String
+  version Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  offers FinanceOffer[]
+  @@unique([ownerId, identityKey])
+}
+model FinanceOffer {
+  id String @id @default(cuid())
+  caseId String
+  case FinanceCase @relation(fields: [caseId], references: [id])
+  institutionId String
+  institution FinanceInstitution @relation(fields: [institutionId], references: [id])
+  institutionSnapshot Json
+  version Int @default(1)
+  data Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  revisions FinanceOfferRevision[]
+  @@index([caseId])
+}
+model FinanceOfferRevision {
+  id String @id @default(cuid())
+  offerId String
+  offer FinanceOffer @relation(fields: [offerId], references: [id])
+  version Int
+  data Json
+  actorId String
+  createdAt DateTime @default(now())
+  @@unique([offerId, version])
+}
+
+model StaffInvitation {
+  id String @id @default(cuid())
+  email String @unique
+  name String
+  role String
+  personId String @unique
+  tokenHash String @unique
+  expiresAt DateTime
+  consumedAt DateTime?
+  revokedAt DateTime?
+  version Int @default(1)
+  createdAt DateTime @default(now())
+}
+
+model FinanceReview {
+ id String @id @default(cuid())
+ caseId String
+ cycle Int
+ snapshot Json
+ preparerPeople Json
+ createdAt DateTime @default(now())
+ @@unique([caseId, cycle])
+}
+model FinanceReviewEvent {
+ id String @id @default(cuid())
+ caseId String
+ cycle Int
+ actorId String
+ actorName String
+ actorPersonId String
+ action String
+ reason String
+ createdAt DateTime @default(now())
+ @@index([caseId, cycle])
+}
+
+model FinanceAuthorization {
+ id String @id @default(cuid())
+ caseId String
+ case FinanceCase @relation(fields: [caseId], references: [id])
+ cycle Int
+ version Int @default(1)
+ status String @default("DRAFT")
+ payload Json
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ revisions FinanceAuthorizationRevision[]
+ @@index([caseId])
+}
+model FinanceAuthorizationRevision {
+ id String @id @default(cuid())
+ authorizationId String
+ authorization FinanceAuthorization @relation(fields: [authorizationId], references: [id])
+ version Int
+ status String
+ payload Json
+ actorId String
+ reason String @default("")
+ createdAt DateTime @default(now())
+ @@unique([authorizationId, version])
+}
+
+model FinanceIncident {
+ id String @id @default(cuid())
+ reference String @unique
+ caseId String?
+ caseReference String @default("")
+ createdBy String
+ ownerId String
+ implicatedPersonId String?
+ version Int @default(1)
+ status String @default("RECEIVED")
+ urgency String
+ title String
+ data Json
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ events FinanceIncidentEvent[]
+ @@index([ownerId, status])
+}
+model FinanceIncidentEvent {
+ id String @id @default(cuid())
+ incidentId String
+ incident FinanceIncident @relation(fields: [incidentId], references: [id])
+ version Int
+ actorId String
+ actorName String
+ action String
+ reason String
+ snapshot Json
+ createdAt DateTime @default(now())
+ @@unique([incidentId, version])
+}
+
+model FinanceMemberUpdate {
+ id String @id @default(cuid())
+ caseId String @unique
+ case FinanceCase @relation(fields: [caseId], references: [id])
+ version Int @default(1)
+ draft Json
+ published Json?
+ audienceId String?
+ visible Boolean @default(false)
+ publishedAt DateTime?
+ updatedAt DateTime @updatedAt
+}
+
+model MemberPublication {
+  attachments PublicationAttachment[]
+  id String @id @default(cuid())
+  title String
+  body String
+  audience String
+  targetId String?
+  targetReference String @default("")
+  status String @default("DRAFT")
+  version Int @default(1)
+  authorId String
+  authorPersonId String
+  reviewerId String?
+  publishedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([status, audience, targetId, publishedAt])
+}
+
+model MemberDocument {
+ closedAt DateTime?
+ closingReason String @default("")
+ id String @id @default(cuid())
+ fileId String
+ file AcquirerFile @relation(fields: [fileId], references: [id])
+ title String
+ category String
+ parcelReferences Json
+ direction String
+ instructions String @default("")
+ version Int @default(0)
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ versions MemberDocumentVersion[]
+ @@index([fileId, updatedAt])
+}
+model MemberDocumentVersion {
+ id String @id @default(cuid())
+ documentId String
+ document MemberDocument @relation(fields: [documentId], references: [id])
+ revision Int
+ originalName String
+ storageKey String @unique
+ mimeType String
+ size Int
+ sha256 String
+ uploadedBy String
+ status String @default("PENDING")
+ reason String @default("")
+ reviewedBy String?
+ reviewedAt DateTime?
+ createdAt DateTime @default(now())
+ @@unique([documentId, revision])
+}
+
+model PublicationAttachment {
+ id String @id @default(cuid())
+ publicationId String
+ publication MemberPublication @relation(fields: [publicationId], references: [id])
+ caption String
+ takenOn String @default("")
+ originalName String
+ storageKey String @unique
+ mimeType String
+ size Int
+ sha256 String
+ createdAt DateTime @default(now())
+ removedAt DateTime?
+ @@index([publicationId, removedAt])
+}
+
+model NotificationReceipt {
+ id String @id @default(cuid())
+ userId String
+ notificationId String
+ readAt DateTime @default(now())
+ @@unique([userId, notificationId])
+}
+
+model RegistryImport {
+ id String @id @default(cuid())
+ actorId String
+ kind String
+ filename String
+ status String @default("PREVIEW")
+ source Json
+ report Json
+ result Json?
+ createdAt DateTime @default(now())
+ expiresAt DateTime
+ committedAt DateTime?
+ @@index([actorId, createdAt])
+}
+
+model TwoFactor {
+ id String @id
+ secret String
+ backupCodes String
+ userId String
+ user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+ verified Boolean @default(true)
+ failedVerificationCount Int @default(0)
+ lockedUntil DateTime?
+ @@index([userId])
+ @@index([secret])
+}
+model EmailDelivery {
+ id String @id @default(cuid())
+ key String @unique
+ recipient String
+ userId String?
+ kind String
+ payload String
+ status String @default("PENDING")
+ attempts Int @default(0)
+ providerId String?
+ lastError String?
+ availableAt DateTime @default(now())
+ expiresAt DateTime
+ firstAttemptAt DateTime?
+ leaseUntil DateTime?
+ createdAt DateTime @default(now())
+ sentAt DateTime?
+ @@index([status, availableAt])
+}
+
+model EmailChange {
+ id String @id @default(cuid())
+ userId String
+ oldEmail String
+ newEmail String
+ oldTokenHash String @unique
+ newTokenHash String @unique
+ oldConfirmed Boolean @default(false)
+ newConfirmed Boolean @default(false)
+ accessVersion Int
+ expiresAt DateTime
+ completedAt DateTime?
+ cancelledAt DateTime?
+ createdAt DateTime @default(now())
+ @@index([userId, createdAt])
+}
+
+model LegalRecord {
+ reviewPart Int @default(1)
+ id String @id @default(cuid())
+ caseId String
+ case FinanceCase @relation(fields:[caseId],references:[id])
+ code String
+ title String
+ version Int @default(1)
+ status String @default("DRAFT")
+ authorId String
+ reviewerId String?
+ data Json
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ revisions LegalRevision[]
+ @@index([caseId, updatedAt])
+}
+model LegalRevision {
+ id String @id @default(cuid())
+ recordId String
+ record LegalRecord @relation(fields:[recordId],references:[id])
+ version Int
+ action String
+ actorId String
+ actorName String
+ actorPersonId String
+ reason String
+ data Json
+ createdAt DateTime @default(now())
+ @@unique([recordId, version])
+}
+
+
+model Original {
+ id String @id @default(cuid())
+ caseId String
+ case FinanceCase @relation(fields:[caseId],references:[id])
+ reference String @unique
+ version Int @default(1)
+ createdAt DateTime @default(now())
+ events OriginalEvent[]
+ @@index([caseId, createdAt])
+}
+model OriginalEvent {
+ id String @id @default(cuid())
+ originalId String
+ original Original @relation(fields:[originalId],references:[id])
+ sequence Int
+ kind String
+ status String @default("PENDING")
+ replacesId String?
+ data Json
+ authorId String
+ authorName String
+ authorPersonId String
+ reviewerId String
+ reviewerName String?
+ reviewerPersonId String?
+ reviewReason String?
+ reviewedAt DateTime?
+ createdAt DateTime @default(now())
+ originalName String
+ storageKey String @unique
+ mimeType String
+ size Int
+ sha256 String
+ @@unique([originalId, sequence])
+ @@index([reviewerId, status])
+}
+
+model AcquirerChange {
+  id String @id @default(cuid())
+  kind String
+  sourceFileId String
+  targetFileId String
+  preparedBy String
+  preparedPersonId String
+  snapshot Json
+  reason String
+  status String @default("PENDING")
+  reviewedBy String?
+  reviewReason String?
+  createdAt DateTime @default(now())
+  reviewedAt DateTime?
+  @@index([status, createdAt])
+  @@index([sourceFileId])
+  @@index([targetFileId])
+}

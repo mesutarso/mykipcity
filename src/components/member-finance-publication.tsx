@@ -1,0 +1,14 @@
+import {activeParcelWhere} from "@/lib/parcel-access-model";
+import { db } from "@/lib/db";
+import { financeCase } from "@/lib/finance";
+import { memberUpdateSchema,emptyMemberUpdate } from "@/lib/member-finance-model";
+import { MemberFinanceForm,MemberPublicationActions } from "./member-finance-form";
+import { MemberFinanceCard } from "./member-finance-card";
+export async function MemberFinancePublication({caseId,userId}:{caseId:string;userId:string}){
+ const item=await financeCase(userId,caseId);
+ const [update,recipient,events]=await Promise.all([db.financeMemberUpdate.findUnique({where:{caseId}}),item.acquirerId?db.acquirer.findUnique({where:{id:item.acquirerId},select:{id:true,registeredName:true,reference:true,user:{select:{active:true,role:true}},file:{select:{declarations:{where:activeParcelWhere(),select:{id:true}}}}}}):null,db.auditEvent.findMany({where:{objectId:caseId,action:{in:["MEMBER_FINANCE_SAVE","MEMBER_FINANCE_PUBLISH","MEMBER_FINANCE_WITHDRAW"]}},orderBy:{createdAt:"desc"},take:30})]);
+ const eligible=!!recipient?.user?.active&&recipient.user.role==="ACQUIRER"&&!!recipient.file?.declarations.length;
+ const visible=!!update?.visible&&update.audienceId===recipient?.id&&eligible;
+ const authors=await db.user.findMany({where:{id:{in:events.map(e=>e.actorId)}},select:{id:true,name:true}});
+ return <><section className="panel"><h2>Suivi destiné à l’acquéreur</h2><p>{recipient?`${recipient.registeredName} · ${recipient.reference}`:"Aucun acquéreur lié à ce dossier."}</p><p className="status">{visible?"Publié dans MyKipCity":"Non visible dans MyKipCity"}</p>{!eligible&&<p>La publication nécessite un compte acquéreur actif et un rattachement parcellaire validé.</p>}<MemberFinanceForm key={update?.version??0} caseId={caseId} version={update?.version??0} initial={update?memberUpdateSchema.parse(update.draft):emptyMemberUpdate}/></section>{update&&<section className="panel"><h2>Aperçu du brouillon enregistré</h2><MemberFinanceCard data={memberUpdateSchema.parse(update.draft)}/><MemberPublicationActions key={update.version} caseId={caseId} version={update.version} visible={update.visible} canPublish={eligible}/></section>}{visible&&update?.published&&<section className="panel"><h2>Actuellement visible par l’acquéreur</h2><MemberFinanceCard data={memberUpdateSchema.parse(update.published)} publishedAt={update.publishedAt}/></section>}<section className="panel"><h2>Historique de publication</h2>{events.map(e=><article key={e.id} className="review-card"><p>{e.action==="MEMBER_FINANCE_SAVE"?"Brouillon enregistré":e.action==="MEMBER_FINANCE_PUBLISH"?"Suivi publié":"Suivi retiré"}</p><small>{authors.find(a=>a.id===e.actorId)?.name??"Référent"} · {e.createdAt.toLocaleString("fr-FR",{timeZone:"Africa/Kinshasa"})}</small></article>)}{!events.length&&<p>Aucune publication.</p>}</section></>;
+}

@@ -1,0 +1,10 @@
+node_modules/
+.next/
+.env*
+!.env.example
+data/
+.demo-access.json
+src/generated/
+*.tsbuildinfo
+test-results/
+

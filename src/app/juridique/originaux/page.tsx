@@ -1,0 +1,17 @@
+import Link from "next/link";
+import {redirect} from "next/navigation";
+import {db} from "@/lib/db";
+import {pageActor} from "@/lib/session";
+import {originalAccess} from "@/lib/originals";
+import {originalSituation,originalStates,originalKinds,originalData} from "@/lib/original-model";
+import {homeForRole} from "@/lib/roles";
+import {Shell,Heading} from "@/components/shell";
+import {Pagination} from "@/components/pagination";
+export default async function Originals({searchParams}:{searchParams:Promise<{q?:string;page?:string;dossier?:string;controle?:string}>}){
+ const actor=await pageActor();if(!["LEGAL_OFFICER","FINANCE_OFFICER","FINANCE_REVIEWER","FINANCE_VALIDATOR"].includes(actor.role))redirect(homeForRole(actor.role));
+ const query=await searchParams,q=(query.q??"").trim().slice(0,100),dossier=(query.dossier??"").slice(0,100),controle=query.controle==="1"?"1":"",page=Math.max(1,Math.min(10000,parseInt(query.page??"1")||1));
+ const where={AND:[originalAccess(actor),{reference:{contains:q}},...(dossier?[{caseId:dossier}]:[]),...(controle?[{events:{some:{status:"PENDING",...(actor.role==="LEGAL_OFFICER"?{reviewerId:actor.id}:{})}}}]:[])]};
+ const [items,total]=await Promise.all([db.original.findMany({where,include:{case:{select:{reference:true}},events:{orderBy:{sequence:"desc"}}},orderBy:[{createdAt:"desc"},{id:"desc"}],take:20,skip:(page-1)*20}),db.original.count({where})]);
+ const today=new Date().toLocaleDateString("en-CA",{timeZone:"Africa/Kinshasa"});
+ return <Shell name={actor.name} legal={actor.role==="LEGAL_OFFICER"} finance={actor.role==="FINANCE_OFFICER"} control={actor.role==="FINANCE_REVIEWER"||actor.role==="FINANCE_VALIDATOR"}><Heading eyebrow="Cabinet juridique" title="Registre des originaux"/><section className="panel"><form className="filters">{dossier&&<input type="hidden" name="dossier" value={dossier}/>}<label>Référence d’inventaire<input name="q" defaultValue={q}/></label><label>Affichage<select name="controle" defaultValue={controle}><option value="">Tous les originaux accessibles</option><option value="1">Contrôles en attente</option></select></label><button className="button">Rechercher</button></form>{!items.length&&<p>Aucun original trouvé. La remise initiale s’enregistre depuis le dossier juridique.</p>}<div className="table-scroll"><table><thead><tr><th>Original</th><th>Dossier</th><th>Situation confirmée</th><th>Garde / retour</th></tr></thead><tbody>{items.map(i=>{const s=originalSituation(i.events),pending=i.events.find(e=>e.status==="PENDING"),initial=s.inventory??(i.events.at(-1)?originalData.parse(i.events.at(-1)!.data).inventory:undefined);return <tr key={i.id}><td><Link className="text-link" href={`/juridique/originaux/${i.id}`}>{i.reference}</Link><p className="small muted">{initial?.nature} · {initial?.documentReference}</p></td><td>{i.case.reference}</td><td>{originalStates[s.state]}{pending&&<p className="status">{originalKinds[originalData.parse(pending.data).kind]} · à contrôler</p>}</td><td>{s.last?.holder??"À confirmer"}<p className="small muted">{s.last?.location}</p>{s.returnDue&&<p className={s.returnDue<today?"feedback error":"small"}>Retour attendu : {s.returnDue}{s.returnDue<today?" · à vérifier":""}</p>}{!s.returnDue&&s.returnTerms&&<p className="small">Retour : {s.returnTerms}</p>}</td></tr>;})}</tbody></table></div><Pagination page={page} total={total} params={{q,dossier,controle}}/></section></Shell>;
+}

@@ -1,0 +1,2 @@
+import {EmailChangeForm} from "@/components/email-change-form";
+export default async function Page({searchParams}:{searchParams:Promise<{token?:string}>}){const token=(await searchParams).token;return <main className="auth-panel" id="main-content"><div className="auth-card"><h1>Confirmer mon adresse</h1>{token&&/^[a-f0-9]{64}$/.test(token)?<EmailChangeForm token={token}/>:<p>Lien invalide.</p>}<a className="text-link" href="/connexion">Connexion</a></div></main>;}

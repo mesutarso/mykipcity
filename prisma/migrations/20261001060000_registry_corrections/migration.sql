@@ -1,0 +1,3 @@
+ALTER TABLE "Acquirer" ADD COLUMN "registryVersion" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "Acquirer" ADD COLUMN "mergedIntoId" TEXT;
+ALTER TABLE "Parcel" ADD COLUMN "registryVersion" INTEGER NOT NULL DEFAULT 0;

@@ -1,0 +1,2 @@
+import {RecoveryForm} from "@/components/account-recovery";
+export default async function Page(){return <main className="auth-panel" id="main-content"><div className="auth-card"><h1>Récupérer mon compte</h1><RecoveryForm/></div></main>;}

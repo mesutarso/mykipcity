@@ -1,0 +1,7 @@
+"use client";
+import {useState} from "react";
+import {useRouter} from "next/navigation";
+export function ContactAssignment({fileId,version,ownerId,choices}:{fileId:string;version:number;ownerId:string|null;choices:{id:string;name:string}[]}){
+ const router=useRouter();const[pending,setPending]=useState(false),[error,setError]=useState("");
+ return <details><summary>Changer l’interlocuteur</summary><form className="form-stack" onSubmit={async e=>{e.preventDefault();const f=new FormData(e.currentTarget);setPending(true);setError("");try{const r=await fetch("/api/contact/assignment",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({fileId,version,targetId:f.get("targetId")||null,reason:f.get("reason")})});const d=await r.json();if(!r.ok)throw new Error(d.error);router.refresh();}catch(e){setError(e instanceof Error?e.message:"Affectation impossible.");}finally{setPending(false);}}}><fieldset disabled={pending}><label>Interlocuteur<select name="targetId" defaultValue={choices.some(c=>c.id===ownerId)?ownerId!:""}><option value="">À attribuer à l’équipe</option>{choices.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label>Motif<textarea name="reason" required minLength={10} maxLength={1000}/></label></fieldset>{error&&<p className="feedback error" role="alert">{error}</p>}<button className="button" disabled={pending}>Enregistrer</button></form></details>;
+}

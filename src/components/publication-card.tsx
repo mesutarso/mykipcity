@@ -1,0 +1,6 @@
+import Image from "next/image";
+import Link from "next/link";
+export type PublicationView={id:string;title:string;body:string;audience:string;targetReference:string;publishedAt:Date|null;attachments?:{id:string;caption:string}[]};
+export function PublicationCard({item,preview=false}:{item:PublicationView;preview?:boolean}){
+ return <article className="publication-card"><p className="eyebrow">{item.audience==="MEMBERS"?"LA VIE DE KIP-CITY":item.audience==="PARCEL"?`PARCELLE ${item.targetReference}`:"MES INFORMATIONS"}</p><h3>{preview?item.title:<Link href={`/mykipcity/informations/${item.id}`}>{item.title}</Link>}</h3>{item.publishedAt&&<time className="muted small" dateTime={item.publishedAt.toISOString()}>{item.publishedAt.toLocaleDateString("fr-FR",{timeZone:"Africa/Kinshasa",dateStyle:"long"})}</time>}{!preview&&item.attachments?.[0]&&<Image unoptimized src={`/api/publication-attachments/${item.attachments[0].id}`} width={700} height={450} alt={item.attachments[0].caption} className="publication-photo"/>}<p className="publication-body">{preview?item.body:item.body.slice(0,220)+(item.body.length>220?"…":"")}</p>{!preview&&<Link className="text-link" href={`/mykipcity/informations/${item.id}`}>Lire la suite →</Link>}</article>;
+}

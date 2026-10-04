@@ -1,0 +1,14 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { pageActor } from "@/lib/session";
+import { db } from "@/lib/db";
+import { homeForRole, staffRoles } from "@/lib/roles";
+import { Shell, Heading } from "@/components/shell";
+import { TeamForm, InvitationActions } from "@/components/team-forms";
+export default async function Team({ searchParams }: { searchParams: Promise<{ q?: string; page?: string }> }) {
+  const actor = await pageActor(); if (actor.role !== "ADMIN") redirect(homeForRole(actor.role));
+  const params = await searchParams; const q = (params.q ?? "").trim().slice(0, 120); const page = Math.max(1, Math.min(10000, Number(params.page) || 1));
+  const where = { role: { in: Object.keys(staffRoles) }, OR: [{ name: { contains: q } }, { email: { contains: q } }] };
+  const [members, count, invites] = await Promise.all([db.user.findMany({ where, orderBy: [{ name: "asc" }, { id: "asc" }], skip: (Math.floor(page) - 1) * 20, take: 20 }), db.user.count({ where }), db.staffInvitation.findMany({ where: { consumedAt: null, OR: [{ name: { contains: q } }, { email: { contains: q } }] }, orderBy: { createdAt: "desc" }, take: 50 })]);
+  return <Shell name={actor.name} admin><Heading eyebrow="ADMINISTRATION" title="Équipe et accès"/><section className="panel"><h2>Collaborateurs</h2><form className="form-grid"><label>Rechercher<input name="q" defaultValue={q} placeholder="Nom ou e-mail"/></label><button className="button">Rechercher</button></form><div className="document-list">{members.map(member => <Link className="document-row" key={member.id} href={`/administration/equipe/${member.id}`}><span><strong>{member.name}</strong><small>{member.email} · {staffRoles[member.role as keyof typeof staffRoles]}</small></span><span className="status">{member.active ? "Actif" : "Suspendu"}</span></Link>)}</div>{!members.length && <p>Aucun collaborateur trouvé.</p>}<div className="actions">{page > 1 && <Link href={`?q=${encodeURIComponent(q)}&page=${page - 1}`}>Précédent</Link>}{page * 20 < count && <Link href={`?q=${encodeURIComponent(q)}&page=${page + 1}`}>Suivant</Link>}</div></section><section className="panel"><h2>Inviter un collaborateur</h2><TeamForm/></section><section className="panel"><h2>Invitations sans compte ({invites.length})</h2><p className="muted">Les 50 dernières invitations correspondant à la recherche.</p>{invites.map(invite => <article className="review-card" key={invite.id}><h3>{invite.name}</h3><p>{invite.email} · {staffRoles[invite.role as keyof typeof staffRoles]}</p><p>{invite.revokedAt ? "Révoquée" : invite.expiresAt <= new Date() ? "Expirée" : `Valable jusqu’au ${invite.expiresAt.toLocaleString("fr-FR", { timeZone: "Africa/Kinshasa" })}`}</p><InvitationActions id={invite.id} version={invite.version} revoked={!!invite.revokedAt}/></article>)}{!invites.length && <p>Aucune invitation.</p>}</section></Shell>;
+}

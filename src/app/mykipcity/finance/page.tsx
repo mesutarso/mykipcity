@@ -1,0 +1,10 @@
+import { redirect } from "next/navigation";
+import { pageActor } from "@/lib/session";
+import { homeForRole } from "@/lib/roles";
+import { memberFinanceRequirements } from "@/lib/member-finance-documents";
+import { FinanceDocumentUpload } from "@/components/finance-documents";
+import { documentStates } from "@/lib/finance-document-model";
+import { memberFinance } from "@/lib/member-finance";
+import { Shell,Heading } from "@/components/shell";
+import { MemberFinanceCard } from "@/components/member-finance-card";
+export default async function MemberFinance(){const actor=await pageActor();if(actor.role!=="ACQUIRER")redirect(homeForRole(actor.role));const records=await memberFinance(actor.id);const requirements=await memberFinanceRequirements(actor.id);return <Shell name={actor.name}><Heading eyebrow="MYKIPCITY" title="Mon accompagnement financier"/>{records.map(r=><MemberFinanceCard key={r.id} data={r.content} publishedAt={r.publishedAt}/>)}{requirements.length>0&&<section className="member-finance-documents"><h2>Mes pièces Finance</h2><div className="document-workspace">{requirements.map(req=><article className="panel" key={req.id}><p className="eyebrow">{req.title}</p><h3>{req.label}</h3>{req.instructions&&<p className="review-observation">{req.instructions}</p>}{req.canUpload?<FinanceDocumentUpload requirementId={req.id} version={req.version}/>:<p className="small muted profile-help">La pièce est en cours de traitement ou le dossier est verrouillé.</p>}{req.documents.map(doc=><div className="document-history" key={doc.id}><a className="text-link" href={`/api/finance/documents/${doc.id}`}>{doc.originalName} · v{doc.revision} ↓</a><p className="small muted">{documentStates[doc.status as keyof typeof documentStates]}</p>{doc.reason&&<p className="review-observation">{doc.reason}</p>}</div>)}</article>)}</div></section>}{!records.length&&<section className="panel"><h2>Aucun suivi publié pour le moment</h2><p>Les informations de votre accompagnement apparaîtront ici lorsque votre référent les aura publiées.</p></section>}</Shell>;}

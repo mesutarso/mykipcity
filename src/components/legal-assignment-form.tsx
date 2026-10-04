@@ -1,0 +1,9 @@
+"use client";
+import {useState,type FormEvent} from "react";
+import {useRouter} from "next/navigation";
+export function LegalAssignmentForm({id,version,choices}:{id:string;version:number;choices:{id:string;name:string}[]}){
+ const router=useRouter();const[error,setError]=useState(""),[pending,setPending]=useState(false);
+ async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();const form=new FormData(e.currentTarget);setPending(true);setError("");try{const response=await fetch("/api/legal/assign",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id,version,targetId:form.get("targetId"),reason:form.get("reason")})});const result=await response.json();if(!response.ok)throw new Error(result.error??"Remplacement impossible.");router.refresh();}catch(e){setError(e instanceof Error?e.message:"Remplacement impossible.");}finally{setPending(false);}}
+ if(!choices.length)return <p className="muted">Aucun remplaçant admissible. Un autre intervenant juridique du Cabinet actif et indépendant doit être désigné dans Équipe et accès.</p>;
+ return <details><summary>Remplacer le intervenant juridique</summary><form className="form-stack" onSubmit={submit}><fieldset disabled={pending}><label>Nouveau intervenant juridique<select name="targetId" defaultValue="" required><option value="">Choisir</option>{choices.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label><label>Motif du remplacement<textarea name="reason" minLength={10} maxLength={1000} rows={3} required/></label></fieldset><p className="muted small">L’affectation du dossier au Cabinet sera mise à jour. Les décisions et les pièces examinées restent conservées.</p>{error&&<p className="feedback error" role="alert">{error}</p>}<button className="button" disabled={pending}>{pending?"Enregistrement…":"Confirmer le remplacement"}</button></form></details>;
+}

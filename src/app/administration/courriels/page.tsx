@@ -1,0 +1,9 @@
+import {mailReadiness} from "@/lib/mail";
+import {redirect} from "next/navigation";
+import {pageActor} from "@/lib/session";
+import {homeForRole} from "@/lib/roles";
+import {db} from "@/lib/db";
+import {Shell,Heading} from "@/components/shell";
+import {Pagination} from "@/components/pagination";
+const states:Record<string,string>={PENDING:"En attente",SENDING:"En cours",SENT:"Accepté par le fournisseur",REVIEW:"À vérifier",CANCELLED:"Annulé ou expiré"};
+export default async function Page({searchParams}:{searchParams:Promise<{page?:string}>}){const actor=await pageActor();if(actor.role!=="ADMIN")redirect(homeForRole(actor.role));const readiness=mailReadiness();const page=Math.max(1,Math.min(10000,parseInt((await searchParams).page??"1")||1));const [items,total]=await Promise.all([db.emailDelivery.findMany({select:{id:true,kind:true,recipient:true,status:true,attempts:true,lastError:true,createdAt:true},orderBy:{createdAt:"desc"},skip:(page-1)*25,take:25}),db.emailDelivery.count()]);return <Shell admin name={actor.name}><Heading eyebrow="ADMINISTRATION" title="Suivi des e-mails"/><section className="panel"><p>Configuration : {readiness.keyConfigured?"clé présente":"clé manquante"} · {readiness.senderConfigured?"expéditeur renseigné":"expéditeur à configurer"}.</p><p>La présence des paramètres ne confirme pas la délivrabilité du domaine.</p><p>{process.env.MAIL_ENABLED==="true"?"Envoi activé":"Envoi désactivé"}</p>{items.map(i=><article className="review-card" key={i.id}><h2>{i.recipient}</h2><p>{states[i.status]??i.status} · {i.attempts} tentative(s)</p><time>{i.createdAt.toLocaleString("fr-FR",{timeZone:"Africa/Kinshasa"})}</time>{i.lastError&&<p>Vérification de l’envoi nécessaire par l’administrateur.</p>}</article>)}{!items.length&&<p>Aucun e-mail en attente ou envoyé.</p>}<Pagination page={page} total={total} size={25}/></section></Shell>;}

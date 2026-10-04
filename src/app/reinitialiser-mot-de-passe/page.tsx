@@ -1,0 +1,2 @@
+import {RecoveryForm} from "@/components/account-recovery";
+export default async function Page({searchParams}:{searchParams:Promise<{token?:string}>}){const token=(await searchParams).token;if(!token)return <main className="auth-card"><p>Lien invalide.</p><a href="/mot-de-passe-oublie">Demander un nouveau lien</a></main>;return <main className="auth-panel" id="main-content"><div className="auth-card"><h1>Nouveau mot de passe</h1><RecoveryForm token={token}/></div></main>;}

@@ -1,0 +1,9 @@
+import Link from "next/link";
+import { pageActor } from "@/lib/session";
+import { notifications } from "@/lib/notifications";
+import { Shell,Heading } from "@/components/shell";
+import { ReadNotifications } from "@/components/notification-actions";
+export default async function Notifications({searchParams}:{searchParams:Promise<{vue?:string}>}){
+ const actor=await pageActor();const all=await notifications(actor.id);const unread=all.filter(n=>!n.read);const onlyUnread=(await searchParams).vue==="non-lues";const items=onlyUnread?unread:all;
+ return <Shell name={actor.name} staff={actor.role==="ACQUIRER_AGENT"} finance={actor.role==="FINANCE_OFFICER"} admin={actor.role==="ADMIN"} control={["FINANCE_REVIEWER","FINANCE_VALIDATOR"].includes(actor.role)}><Heading eyebrow="MON COMPTE" title="Notifications"><ReadNotifications ids={unread.map(n=>n.id)} label="Tout marquer comme lu"/></Heading><div className="actions notification-filters"><Link className={`button ${onlyUnread?"secondary":""}`} href="/notifications">Toutes</Link><Link className={`button ${onlyUnread?"":"secondary"}`} href="/notifications?vue=non-lues">Non lues ({unread.length})</Link></div><section className="panel">{items.map(n=><article className={`notification-row ${n.read?"":"unread"}`} key={n.id}><div><Link href={n.href}>{n.title}</Link><p className="small muted"><time dateTime={n.createdAt.toISOString()}>{n.createdAt.toLocaleString("fr-FR",{timeZone:"Africa/Kinshasa",dateStyle:"short",timeStyle:"short"})}</time> · {n.read?"Lue":"Non lue"}</p></div>{!n.read&&<ReadNotifications ids={[n.id]}/>}</article>)}{!items.length&&<p className="empty-text">{onlyUnread?"Vous êtes à jour.":"Aucune notification pour le moment."}</p>}</section><p className="small muted profile-help">Les 100 notifications récentes encore accessibles sont affichées.</p></Shell>;
+}
