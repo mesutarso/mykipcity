@@ -20,6 +20,10 @@ Les mots de passe aléatoires sont enregistrés dans `/app/data/showcase-access.
 
 Le seed conserve les comptes, leurs mots de passe et les modifications métier lors des redémarrages. Après initialisation, `SEED_SHOWCASE=false` permet de désactiver l’appel. Utiliser un volume neuf pour cette démonstration ; les anciennes données ne sont jamais effacées automatiquement. Le seed historique `db:seed` reste disponible pour les anciennes recettes locales, mais n’est pas lancé par le Dockerfile.
 
+Pour utiliser le mot de passe commun du document d’accès client, définir `SEED_SHOWCASE_PASSWORD` au runtime dans Coolify, avec `SEED_SHOWCASE=true` et `DEMO_MODE=true`. Ce paramètre configure uniquement les dix comptes du scénario, y compris sur une installation existante. Les sessions sont fermées lorsque le mot de passe change ; les facteurs MFA sont conservés. Les redémarrages suivants ne réinitialisent pas les accès si le mot de passe est identique. Aucun mot de passe commun n’est incorporé au dépôt ou à l’image.
+
+La compilation prépare le mode WAL de SQLite avant le lancement des processus Next.js. Au démarrage, l’initialisation utilise un délai de cinq secondes et réessaie les conflits temporaires, sans ignorer les verrous persistants.
+
 Si une sonde HTTP est activée, utiliser `/connexion` sur le port 3200. Conserver une seule instance et désactiver les déploiements avec chevauchement de deux instances pour cette base SQLite locale. Sauvegarder la base et les documents avant une mise à jour avec migrations.
 
 Pour une base existante, conserver les chemins utilisés ou copier la sauvegarde restaurée dans le volume avant le premier démarrage. Ne pas remplacer le stockage existant par un volume vide en espérant retrouver les données.
@@ -38,7 +42,7 @@ Les comptes et mots de passe de recette sont documentés dans le README. Pour le
 
 ## Initialisation des collaborateurs depuis une source privée
 
-Le nouveau script `bun run db:seed:users` crée uniquement les collaborateurs fournis dans un fichier JSON privé désigné par `SEED_USERS_FILE`. Il n’invente aucun utilisateur ou dossier, ne modifie pas les comptes existants et n’affiche jamais les mots de passe. Chaque entrée contient `name`, `email`, `role` et `password` (16 caractères minimum, unique par personne). Les rôles autorisés sont `ADMIN`, `ACQUIRER_AGENT`, `FINANCE_OFFICER`, `FINANCE_REVIEWER`, `FINANCE_VALIDATOR` et `LEGAL_OFFICER`. Les acquéreurs doivent suivre le circuit d’invitation et de rattachement aux dossiers.
+Le nouveau script `bun run db:seed:users` crée uniquement les collaborateurs fournis dans un fichier JSON privé désigné par `SEED_USERS_FILE`. Il n’invente aucun utilisateur ou dossier, ne modifie pas les comptes existants et n’affiche jamais les mots de passe. Le fichier accepte un objet avec `defaultPassword` (12 caractères minimum) et `users`. Chaque entrée de `users` contient `name`, `email` et `role` ; un champ `password` facultatif remplace le mot de passe par défaut pour cette personne. L’ancien format tableau avec un mot de passe par personne reste accepté. Les adresses réservées `.test` sont acceptées uniquement en démonstration. Les rôles autorisés sont `ADMIN`, `ACQUIRER_AGENT`, `FINANCE_OFFICER`, `FINANCE_REVIEWER`, `FINANCE_VALIDATOR` et `LEGAL_OFFICER`. Les acquéreurs doivent suivre le circuit d’invitation et de rattachement aux dossiers.
 
 Monter ce fichier en lecture seule hors du répertoire public, puis définir `SEED_USERS_FILE` avec son chemin dans le conteneur. L’entrypoint applique alors les migrations et exécute ce seed avant de démarrer. Il peut être rejoué sans réinitialiser les mots de passe ni les rôles. Retirer cette variable et le fichier privé après l’initialisation. Ne jamais committer ou incorporer le fichier dans l’image. Ce mécanisme ne lève pas à lui seul le périmètre de démonstration de l’application.
 
@@ -56,3 +60,7 @@ docker run --rm --name mykipcity -p 127.0.0.1:3200:3200 \
 ```
 
 Pour un test local, mettre `BETTER_AUTH_URL=http://127.0.0.1:3200`. Le Dockerfile utilise uniquement des valeurs fictives lors de la compilation ; `.env`, les données locales et les accès de démonstration sont exclus du contexte Docker.
+
+### Liste privée modifiable
+
+Le fichier local `private/users.json` contient les sept collaborateurs de recette et le mot de passe par défaut demandé. Il est exclu de Git et de l’image Docker. Modifier les entrées dans `users`, puis monter ce fichier privé dans le conteneur (par exemple `/app/data/users.json`) et définir `SEED_USERS_FILE=/app/data/users.json`. Le seed crée uniquement les comptes absents : il conserve les mots de passe des comptes existants, notamment ceux du scénario initialisé par `SEED_SHOWCASE`.

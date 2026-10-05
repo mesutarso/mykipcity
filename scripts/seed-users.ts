@@ -2,34 +2,14 @@ import "dotenv/config";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { hashPassword } from "better-auth/crypto";
-import { z } from "zod";
 import { db } from "../src/lib/db";
-import { staffRoles } from "../src/lib/roles";
-
-const userSchema = z.object({
-  name: z.string().trim().min(2).max(200),
-  email: z.email().trim().toLowerCase().refine(
-    (email) => !email.endsWith(".test") && !email.endsWith(".invalid"),
-    "Utiliser une adresse réelle pour l’initialisation des collaborateurs.",
-  ),
-  role: z.enum(Object.keys(staffRoles) as [keyof typeof staffRoles, ...(keyof typeof staffRoles)[]]),
-  password: z.string().min(16).max(128),
-}).strict();
-const usersSchema = z.array(userSchema).min(1).max(100).superRefine((users, ctx) => {
-  if (new Set(users.map((user) => user.email)).size !== users.length) {
-    ctx.addIssue({ code: "custom", message: "Les adresses e-mail doivent être uniques." });
-  }
-});
+import { parseSeedUsers } from "./seed-users-model";
 
 async function main() {
   const inputFile = process.env.SEED_USERS_FILE;
   if (!inputFile) throw new Error("Configurer SEED_USERS_FILE vers un fichier JSON privé.");
-  const parsed = usersSchema.safeParse(JSON.parse(readFileSync(inputFile, "utf8")));
-  if (!parsed.success) {
-    // Do not print input values or Zod errors that may include credentials.
-    throw new Error("Fichier utilisateurs invalide : vérifier noms, adresses, rôles, mots de passe (16 caractères minimum) et doublons.");
-  }
-  const prepared = await Promise.all(parsed.data.map(async (user) => ({
+  const users = parseSeedUsers(JSON.parse(readFileSync(inputFile, "utf8")), process.env.DEMO_MODE === "true");
+  const prepared = await Promise.all(users.map(async (user) => ({
     ...user, password: await hashPassword(user.password),
   })));
   const created = await db.$transaction(async (tx) => {

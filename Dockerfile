@@ -16,6 +16,8 @@ RUN bun install --frozen-lockfile && npm rebuild better-sqlite3 \
 COPY . .
 # Build-only placeholders: the actual secrets are injected at runtime.
 RUN DATABASE_URL=file:/tmp/mykipcity-build/database.sqlite bun run db:generate
+# Enable WAL once before Next.js starts its parallel page-data workers.
+RUN node -e "const DB=require('better-sqlite3');const db=new DB('/tmp/mykipcity-build/database.sqlite');db.pragma('journal_mode = WAL');db.close()"
 RUN NODE_ENV=production DEMO_MODE=true \
     DATABASE_URL=file:/tmp/mykipcity-build/database.sqlite \
     DOCUMENTS_DIR=/tmp/mykipcity-build/documents \

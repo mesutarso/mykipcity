@@ -50,6 +50,16 @@ test("Scénario : comptes, pièces privées, circuits métier et redémarrage sa
     assert.equal(readFileSync(accessPath, "utf8"), access);
     assert.equal((await db.user.findUniqueOrThrow({ where: { id: "mykipcity-showcase-v1-julien" } })).name, "Profil modifié en recette");
     assert.equal((await db.account.findUniqueOrThrow({ where: { id: account.id } })).password, account.password);
+    process.env.SEED_SHOWCASE_PASSWORD = "client-test-password-2026";
+    run(["--import", "tsx", "scripts/seed-showcase.ts"]);
+    const configured = await db.account.findUniqueOrThrow({ where: { id: account.id } });
+    assert.ok(await verifyPassword({ password: process.env.SEED_SHOWCASE_PASSWORD, hash: configured.password! }));
+    const auditAfterConfiguration = await db.auditEvent.count();
+    run(["--import", "tsx", "scripts/seed-showcase.ts"]);
+    assert.equal(await db.auditEvent.count(), auditAfterConfiguration);
+    assert.equal((await db.account.findUniqueOrThrow({ where: { id: account.id } })).password, configured.password);
+    assert.equal(await db.user.count(), 10);
+    delete process.env.SEED_SHOWCASE_PASSWORD;
   } finally {
     await disconnect?.();
     rmSync(root, { recursive: true, force: true });

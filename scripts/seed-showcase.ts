@@ -1,8 +1,8 @@
 import "dotenv/config";
 import { randomBytes, createHash } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile, rename } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
-import { hashPassword } from "better-auth/crypto";
+import { hashPassword, verifyPassword } from "better-auth/crypto";
 import { db } from "../src/lib/db";
 import { documentDetails } from "../src/lib/dossier-model";
 import { reviewDeclaration } from "../src/lib/workflow";
@@ -32,9 +32,33 @@ const clients = [
 const id = (key: string) => `${scenario}-${key}`;
 const email = (key: string) => `${key}@recette.kipcity.test`;
 
+async function configureShowcasePassword(password: string) {
+  const root = resolve(process.env.DOCUMENTS_DIR ?? "./data/documents");
+  const accessPath = resolve(dirname(root), "showcase-access.json");
+  await mkdir(dirname(accessPath), { recursive: true });
+  const hash = await hashPassword(password);
+  await db.$transaction(async tx => {
+    for (const [key] of people) {
+      const user = await tx.user.findUniqueOrThrow({ where: { id: id(key) } });
+      if (user.email !== email(key)) throw new Error("Identité du compte de recette modifiée ; réinitialisation refusée.");
+      const account = await tx.account.findUniqueOrThrow({ where: { id: `${id(key)}-credential` } });
+      if (account.password && await verifyPassword({ password, hash: account.password })) continue;
+      await tx.account.update({ where: { id: account.id }, data: { password: hash } });
+      await tx.session.deleteMany({ where: { userId: user.id } });
+      await tx.auditEvent.create({ data: { actorId: id("admin"), objectId: user.id, action: "SHOWCASE_PASSWORD_CONFIGURED", detail: "Mot de passe des tests configuré depuis l’environnement privé." } });
+    }
+  });
+  const temporary = `${accessPath}.tmp`;
+  await writeFile(temporary, JSON.stringify({ scenario, passwords: Object.fromEntries(people.map(([key]) => [key, password])), accounts: people.map(([key, name, role]) => ({ name, email: email(key), role, passwordKey: key })) }, null, 2), { mode: 0o600 });
+  await rename(temporary, accessPath);
+}
+
 async function main() {
   if (process.env.DEMO_MODE !== "true") throw new Error("Le scénario exige DEMO_MODE=true.");
+  const configuredPassword = process.env.SEED_SHOWCASE_PASSWORD;
+  if (configuredPassword && (configuredPassword.length < 12 || configuredPassword.length > 128)) throw new Error("Le mot de passe des tests doit comporter 12 à 128 caractères.");
   if (await db.auditEvent.findFirst({ where: { action: "SHOWCASE_INITIALIZED", objectId: scenario } })) {
+    if (configuredPassword) await configureShowcasePassword(configuredPassword);
     console.log("Scénario MyKipCity déjà initialisé ; données et accès conservés.");
     return;
   }
@@ -122,6 +146,7 @@ async function main() {
     if (publication.status === "IN_REVIEW") await changePublication(id("relecture"), { action: "publish", id: publication.id, version: publication.version, reason: "Contenu relu et approuvé par une seconde personne." });
   }
   await db.auditEvent.create({ data: { actorId: id("admin"), objectId: scenario, action: "SHOWCASE_INITIALIZED", detail: "Scénario de recette avec identités inventées et opérations applicatives effectives." } });
+  if (configuredPassword) await configureShowcasePassword(configuredPassword);
   console.log("Scénario MyKipCity initialisé. Accès conservés dans le fichier privé showcase-access.json, à côté du dossier documents.");
 }
 

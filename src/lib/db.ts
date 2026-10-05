@@ -23,12 +23,26 @@ class ConfiguredAdapter extends PrismaBetterSqlite3 {
   }
 }
 function createClient() {
-  const sqlite = new Database(databasePath);
-  sqlite.pragma("journal_mode = WAL");
-  sqlite.pragma("foreign_keys = ON");
-  sqlite.pragma("synchronous = FULL");
-  sqlite.pragma("busy_timeout = 5000");
-  sqlite.close();
+  const sqlite = new Database(databasePath, { timeout: 5000 });
+  try {
+    sqlite.pragma("busy_timeout = 5000");
+    const deadline = Date.now() + 5000;
+    // Changing journal mode may return the old mode or SQLITE_BUSY while another
+    // process opens the same database. Retry only this startup operation.
+    while (true) {
+      try {
+        if (sqlite.pragma("journal_mode = WAL", { simple: true }) === "wal") break;
+      } catch (error) {
+        if ((error as { code?: string }).code !== "SQLITE_BUSY") throw error;
+      }
+      if (Date.now() >= deadline) throw new Error("Impossible d’initialiser SQLite en WAL : verrou persistant.");
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50);
+    }
+    sqlite.pragma("foreign_keys = ON");
+    sqlite.pragma("synchronous = FULL");
+  } finally {
+    sqlite.close();
+  }
   return new PrismaClient({ adapter: new ConfiguredAdapter({ url: `file:${databasePath}`, timeout: 5000 }) });
 }
 export const db = globalDb.kipDb ?? createClient();
