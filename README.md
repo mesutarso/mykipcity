@@ -4,13 +4,19 @@
 
 Gestion → **Regroupements et titulaires** permet de réunir les dossiers de deux comptes actifs appartenant à la même personne, après examen de preuves et validation par deux agents distincts. Le compte conservé dispose d’un sélecteur de dossier ; contrats, échanges et accès Finance autorisés sont conservés. Le compte d’origine est désactivé et les sessions des deux comptes sont fermées. Le remplacement de l’accès d’un titulaire à une parcelle utilise également deux agents, sans transfert des documents privés entre personnes. Les représentants restent en consultation des informations autorisées de la parcelle, sans pouvoir sur le dossier d’autrui.
 
-La migration est appliquée à la base locale après sauvegarde vérifiée. 151 tests réussis, TypeScript, lint et compilation vérifiés. Le regroupement et le parcours du membre ont été exercés dans le navigateur sur une copie isolée. Voir [la recette technique](docs/RECETTE-MYKIPCITY-2026-10-05.md).
+La migration est appliquée à la base locale après sauvegarde vérifiée. 152 tests réussis, TypeScript, lint et compilation vérifiés. Le regroupement et le parcours du membre ont été exercés dans le navigateur sur une copie isolée. Voir [la recette technique](docs/RECETTE-MYKIPCITY-2026-10-05.md).
 
-`bun run mail status` affiche uniquement la présence de la configuration Resend. La clé et l’expéditeur restent à fournir ; les envois sont désactivés. La validation des e-mails réels et le pilote client restent nécessaires avant clôture métier. Les sections historiques ci-dessous décrivent les tranches précédentes ; le journal et l’inventaire actualisé font foi pour l’état courant.
+`bun run mail status` affiche uniquement la présence de la configuration Resend. L’expéditeur `my@kip-city.com` est configuré ; le test réel a été reçu en boîte principale et confirmé par l’utilisateur. Le traitement automatique est activé pendant que le serveur tourne ; les adresses fictives ne sont pas envoyées au fournisseur. Le pilote client reste nécessaire avant clôture métier. Le menu mobile utilise le composant Sheet de shadcn ; les menus n’ont plus de bordure colorée à gauche. Les sections historiques ci-dessous décrivent les tranches précédentes ; le journal et l’inventaire actualisé font foi pour l’état courant.
 
 Application privée séparée des sites publics existants. Stack : Next.js, Prisma, SQLite locale et Better Auth. Cette tranche permet de montrer le parcours acquéreur demandé par le client, avec des données fictives uniquement. Finance dispose désormais de dossiers, demandes et budgets en brouillon, pièces privées, fiches institutions et offres reçues. Signatures, contrôles et Juridique restent à implémenter.
 
+## Déploiement Docker / Coolify et démonstration réaliste
+
+Voir [DOCKER-COOLIFY.md](docs/DOCKER-COOLIFY.md). L’image fixe Node 24.20.0 et Bun 1.4.2, applique les migrations et initialise le scénario avec `SEED_SHOWCASE=true`. Celui-ci comporte dix comptes, trois dossiers acquéreurs et Finance, des pièces privées, messages et publications. Les accès aléatoires sont conservés dans le volume privé ; aucune donnée réelle ni mot de passe n’est committé. L’interface adopte une présentation d’espace personnel, tandis que le périmètre de recette reste documenté et `DEMO_MODE=true` reste requis.
+
 ## Démarrage
+
+La préparation du pilote distant sur `my.kip-city.com` est décrite dans [PILOTE.md](docs/PILOTE.md). `bun run check:environment` contrôle la configuration locale ; ajouter `--hosted` pour le futur serveur. Le modèle sans secrets se trouve dans `deploy/pilot.env.example`.
 
 Prérequis : Node.js 24 et Bun. Depuis ce dossier :
 

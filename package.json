@@ -4,6 +4,7 @@
   "private": true,
   "packageManager": "bun@1.4.2",
   "scripts": {
+    "check:environment": "node --import tsx scripts/check-environment.ts",
     "dev": "next dev --hostname 127.0.0.1 --port 3200",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1 --port 3200",
@@ -12,6 +13,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "node --import tsx scripts/seed.ts",
+    "db:seed:users": "node --import tsx scripts/seed-users.ts",
+    "db:seed:showcase": "node --import tsx scripts/seed-showcase.ts",
     "test": "node --import tsx --test tests/*.test.ts",
     "db:seed:finance": "node --import tsx scripts/seed-finance.ts",
     "db:seed:admin": "node --import tsx scripts/seed-admin.ts",

@@ -8,7 +8,7 @@ MyKipCity : comptes, e-mails/rappels, Contact, dossiers/registre ; demande de fi
 
 Livraison du 30 septembre : récupération du mot de passe, double authentification interne, vérification et changement d’e-mail ; file d’e-mails chiffrée et connecteur Resend désactivé ; rappels quotidiens ; affectation Contact ; corrections du registre et d’identité ; regroupement des fiches sans compte ; réexamen de qualité. Finance : remplacement du contrôleur ; Cabinet, sept formulaires juridiques en deux parties, versions et visas indépendants ; simulation interne.
 
-La reprise des comptes/dossiers actifs et le remplacement de l’accès du titulaire sont livrés le 5 octobre, avec double contrôle et conservation des archives. Restent la configuration et la réception réelle des e-mails (Resend annoncé par l’utilisateur), le pilote client, ainsi que les circuits Finance/Juridique détaillés ci-dessous. Les pouvoirs étendus des représentants ne sont pas demandés. Les formulaires juridiques ne remplacent pas ces circuits.
+La reprise des comptes/dossiers actifs et le remplacement de l’accès du titulaire sont livrés le 5 octobre, avec double contrôle et conservation des archives. Resend est configuré depuis `my@kip-city.com` ; le message réel de test a été confirmé en boîte principale. Restent le pilote client et ses scénarios d’e-mails, ainsi que les circuits Finance/Juridique détaillés ci-dessous. Les pouvoirs étendus des représentants ne sont pas demandés. Les formulaires juridiques ne remplacent pas ces circuits.
 
 ## Déjà fonctionnel en préproduction locale
 
@@ -18,12 +18,12 @@ La reprise des comptes/dossiers actifs et le remplacement de l’accès du titul
 - Circuit préparateur/contrôleur/validateur, préparation des autorisations FIN-F05, incidents et réclamations internes.
 - Accompagnement financier publié au membre, avec éléments demandés, rendez-vous et contact.
 - Publications textuelles membres/acquéreur/parcelle, relecture distincte, publication/retrait, articles et filtre par parcelle.
-- 151 tests automatisés réussis ; TypeScript, lint et compilation réussis. Regroupement et parcours membre vérifiés dans le navigateur sur copie isolée. Ces contrôles ne remplacent pas une recette client ni l’ouverture en production.
+- 152 tests automatisés réussis ; TypeScript, lint et compilation réussis. Regroupement et parcours membre vérifiés dans le navigateur sur copie isolée. Ces contrôles ne remplacent pas une recette client ni l’ouverture en production.
 
 ## 1. MyKipCity à compléter
 
 - Profil : téléphone, ville et pays modifiables avec historique, après vérification comme en préparation. Vérification d’e-mail, changement avec double confirmation et correction d’identité par l’équipe livrés. La vérification du téléphone reste à définir.
-- Notifications internes : fil et lu/non lu livrés (100 événements récents). Rappels quotidiens et invitations/liens de compte en file persistante livrés ; restent fournisseur, expéditeur, délivrabilité et validation des rythmes de rappel.
+- Notifications internes : fil et lu/non lu livrés (100 événements récents). Rappels quotidiens et invitations/liens de compte en file persistante livrés ; Resend et expéditeur configurés, test reçu en boîte principale. Restent validation des rythmes de rappel et vérification des liens de compte dans le pilote.
 - Dossier : identité contractuelle, coordonnées, titulaires, références, types de pièces et association multi-parcelles ajoutés. Le contrat manquant permet une transmission incomplète, sans validation automatique. Dépôt multipage ordonné, versions groupées et nouvel essai sans doublon livrés. Cotitularité et représentation vérifiées individuellement par parcelle ajoutées, avec mandat, expiration, retrait et renouvellement. Réexamen de qualité et remplacement d’accès du titulaire avec deux agents livrés. Reste la reprise partielle des gros fichiers après interruption réseau, hors lot actif. Les invitations acquéreurs passent à 72 h ; les invitations internes restent à 48 h.
 - Documents : demandes, remises, filtres par parcelle/type, versions et contrôles désormais disponibles pour l’équipe acquéreurs. Dépôt membre Finance, classement des contrats initiaux, annulation/retrait et pagination ajoutés. Versionnement groupé des contrats initiaux livré. Restent optimisation des requêtes des listes documentaires et politique de conservation.
 - Informations : photos et PDF privés, légendes, date de prise de vue facultative et relecture sont désormais disponibles. Programmation après relecture, consultation côte à côte des deux derniers textes, archivage et restauration en brouillon ajoutés. Comparaison libre de toutes les versions livrée : texte, destinataires, statut et fichiers, avec téléchargement privé des pièces historiques réservé à l’équipe. Reste la politique de conservation approuvée.
@@ -91,7 +91,7 @@ Les fichiers sont encore stockés localement. L’environnement reste une prépr
 
 ## Ordre de travail dans le périmètre demandé
 
-1. Confirmer le fournisseur et l’expéditeur des e-mails ; raccorder la délivrabilité et valider les rappels. Aucun envoi réel réalisé.
+1. Réceptionner les scénarios d’invitation, récupération et rappels du pilote ; le raccordement Resend et un envoi réel reçu sont vérifiés. Le suivi automatique des événements de délivrabilité reste à raccorder si retenu.
 2. Faire réceptionner le pilote MyKipCity : comptes regroupés, remplacement d’accès, documents et Contact ; conserver la portée de consultation choisie pour les représentants.
 3. Finaliser FIN-F03/FIN-F05, réclamations, extensions du suivi des financements et interface FIN-F06 à partir des modèles approuvés.
 4. Transformer les annexes juridiques en registres et circuits spécialisés : exposition, pouvoirs, engagements, appels, recours et libérations, avec décisions compétentes et preuves séparées.

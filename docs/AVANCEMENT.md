@@ -1,16 +1,31 @@
 # Avancement — première tranche locale
 
+## Docker et démonstration réaliste — 5 octobre 2026
+
+Dockerfile avec Node 24.20.0 et Bun 1.4.2, compilation Linux de SQLite, migrations au démarrage, compte système non privilégié et stockage privé dans `/app/data`. Secrets réels exclus de la compilation. `SEED_SHOWCASE=true` initialise dix comptes, trois dossiers et budgets Finance, pièces PDF privées, messages, deux suivis membres et deux publications. Les opérations utilisent les circuits métier ; les données restent inventées pour la recette. Les accès aléatoires sont dans le volume privé, jamais dans Git. L’interface affiche « Espace privé » sans les anciens bandeaux de préproduction.
+
+Validation : 157 tests réussis, TypeScript et lint réussis, image Docker construite, démarrage sur volume vierge avec les 28 migrations et seed automatique, connexion HTTP effective du membre et consultation de son tableau de bord, Finance, informations et documents. Le test du seed vérifie son caractère rejouable, les permissions du fichier d’accès et le cloisonnement des pièces. Guide dans [DOCKER-COOLIFY.md](DOCKER-COOLIFY.md). Le périmètre reste une démonstration réaliste, sans signature ni opération bancaire réelle.
+
+## Préparation du pilote distant — 5 octobre 2026
+
+Domaine retenu : `https://my.kip-city.com` ; hébergement encore à identifier. Modèle sans secrets dans `deploy/pilot.env.example`, commande `bun run check:environment` et variante `--hosted`, grille de 13 scénarios dans [PILOTE.md](PILOTE.md). Le contrôle n’affiche aucune valeur secrète et ne modifie pas les données. Il impose au pilote distant HTTPS, chemins privés absolus, MFA et messagerie configurée.
+
+Vérification : 156 tests réussis, dont quatre nouveaux contrôles de configuration. Les 12 contrôles locaux passent ; le mode distant refuse correctement la configuration locale (URL et chemins relatifs). Aucun déploiement ni changement DNS effectué. Le code reste limité aux données fictives ; les conditions d’ouverture réelle demeurent distinctes.
+
 ## Dernier ajout — MyKipCity, 5 octobre 2026
 
 - Décisions utilisateur appliquées : deux comptes actifs d’une même personne peuvent être regroupés après vérification et décision par deux personnes de l’équipe. Les représentants restent limités à la consultation des informations de la parcelle et à leur propre dossier.
 - Gestion → Regroupements et titulaires : demande motivée, preuves actuelles téléchargeables, vérification de toutes les pages et empreintes, copie de l’état examiné, refus/retrait et seconde décision indépendante. Toute modification des comptes, dossiers ou preuves impose un nouvel examen.
 - Regroupement atomique : tous les dossiers accessibles depuis le compte conservé, désactivation du compte d’origine, fermeture des sessions, annulation des changements d’adresse et invitations obsolètes. Références, contrats, conversations, auteurs, pièces et audiences Finance conservés. Sélecteur de dossier, formulaires ciblés, informations et notifications adaptés.
 - Remplacement d’accès du titulaire : retrait de l’ancien rattachement et validation du nouveau dans la même transaction, deux preuves contractuelles et deux personnes obligatoires. Blocage si d’autres droits actifs nécessitent examen. Aucune mutation foncière ni transmission des archives personnelles à un autre titulaire.
-- Diagnostic Resend sans exposition de secrets ; configuration absente : aucun envoi ni tentative consommée. Commandes de messagerie corrigées pour l’exécution Node/tsx. Clé et expéditeur attendus, envois toujours désactivés.
-- Validation : 151 tests réussis, TypeScript, lint et compilation réussis. Recette navigateur sur copie restaurée : préparation agent, approbation relecteur, connexion du compte conservé, sélection des deux dossiers, documents et Contact. Contraste corrigé ; aucun échec axe WCAG A/AA sur les écrans examinés (décision et dashboard mobile/bureau). Cela ne vaut pas audit complet d’accessibilité.
-- Migration `20261005090000_acquirer_changes` appliquée à la base locale après vérification de `data/backups/2026-10-05-before-mykipcity-completion` (six fichiers). Les regroupements fictifs ont été exécutés uniquement sur la copie de recette. Aucun e-mail réel envoyé.
+- Diagnostic Resend sans exposition de secrets ; configuration absente : aucun envoi ni tentative consommée. Commandes de messagerie corrigées pour l’exécution Node/tsx. Clé fournie par l’utilisateur, variable normalisée et expéditeur `my@kip-city.com` configuré. Test réel accepté par Resend et réception en boîte Gmail principale confirmée par l’utilisateur. Traitement automatique activé ; destinataires fictifs réservés annulés sans appel fournisseur.
+- Validation : 152 tests réussis, TypeScript, lint et compilation réussis. Recette navigateur sur copie restaurée : préparation agent, approbation relecteur, connexion du compte conservé, sélection des deux dossiers, documents et Contact. Contraste corrigé ; aucun échec axe WCAG A/AA sur les écrans examinés (décision et dashboard mobile/bureau). Cela ne vaut pas audit complet d’accessibilité.
+- Migration `20261005090000_acquirer_changes` appliquée à la base locale après vérification de `data/backups/2026-10-05-before-mykipcity-completion` (six fichiers). Les regroupements fictifs ont été exécutés uniquement sur la copie de recette. Un seul e-mail réel de test envoyé à l’adresse désignée par l’utilisateur.
+- Navigation : bordure colorée de sélection supprimée ; menu mobile dans le Sheet officiel shadcn, rubriques et compte accessibles, fermeture à la navigation et par Échap, focus confiné puis rendu au bouton. Recette visuelle et clavier réussie.
 
-Détail : [recette technique](RECETTE-MYKIPCITY-2026-10-05.md). Restent la configuration et la réception réelle des e-mails, puis le pilote et le procès-verbal client. Finance/Juridique ne sont pas déclarés terminés par cette livraison.
+Version compilée démarrée sur `http://127.0.0.1:3200`. Contrôles HTTP réussis ; le script accepte la redirection Next en streaming sans contenu de dossier.
+
+Détail : [recette technique](RECETTE-MYKIPCITY-2026-10-05.md). Restent le pilote et le procès-verbal client, incluant les liens de compte et rappels avec les destinataires du pilote. Finance/Juridique ne sont pas déclarés terminés par cette livraison.
 
 ## Livraison précédente — registre des originaux JUR-J03
 

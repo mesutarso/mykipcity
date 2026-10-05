@@ -1,6 +1,6 @@
 # MyKipCity — recette technique du 5 octobre 2026
 
-La reprise des comptes actifs et le remplacement d’accès d’un titulaire sont livrés localement. La clôture métier reste conditionnée à la réception des e-mails réels et au pilote client.
+La reprise des comptes actifs et le remplacement d’accès d’un titulaire sont livrés localement. Le raccordement Resend et la réception d’un e-mail réel sont vérifiés. La clôture métier reste conditionnée au pilote client.
 
 ## Règles retenues
 
@@ -16,7 +16,7 @@ Les représentants consultent uniquement les informations de parcelle autorisée
 
 | Contrôle | Résultat |
 | --- | --- |
-| Suite automatisée complète, bases temporaires et migrations réelles | 151 tests réussis, aucun échec |
+| Suite automatisée complète, bases temporaires et migrations réelles | 152 tests réussis, aucun échec |
 | Types, lint, compilation Next | Réussis |
 | Droits des rôles, preuves étrangères, séparation des personnes | Refus vérifiés |
 | Approbations concurrentes | Une seule opération appliquée |
@@ -25,9 +25,13 @@ Les représentants consultent uniquement les informations de parcelle autorisée
 | Pièces Finance historiques et changement d’adresse du compte conservé | Vérifiés sans exposition des pièces internes ni collision des fiches |
 | Remplacement du titulaire et tentative de restaurer l’ancien accès | Nouveau droit accordé, ancien retiré, restauration concurrente refusée |
 | Formulaires avec plusieurs dossiers | Cible explicite exigée ; autre dossier préservé |
-| Diagnostic Resend et commande d’envoi sans configuration | Configuration absente, zéro envoi |
+| Diagnostic Resend sans configuration | Zéro envoi et zéro tentative |
+| Envoi réel après configuration utilisateur | Accepté par Resend, reçu en boîte principale et confirmé par l’utilisateur |
+| Destinataires fictifs réservés | Annulés sans appel fournisseur |
 
 Recette navigateur sur une copie restaurée : un agent prépare le regroupement fictif, le compte Relecture l’approuve, puis Camille se reconnecte et retrouve ACQ-DEMO-001 et RECETTE-DOUBLE. La sélection de RECETTE-DOUBLE affiche DEMO-A02, son contrat et sa conversation. Contrôle visuel bureau 1440 × 1000 et mobile 390 × 844. Axe : zéro violation sur la décision et le tableau de bord ; aucun élément à examiner manuellement sur le tableau de bord après correction de contraste. Le remplacement de titulaire est couvert par les tests d’intégration ; il n’a pas été rejoué dans le navigateur.
+
+La version compilée est démarrée sur `http://127.0.0.1:3200`, avec la configuration MFA interne normale. Contrôle HTTP : dossier anonyme redirigé vers la connexion, document anonyme refusé, origine étrangère refusée.
 
 ## Base locale et retour arrière
 
@@ -37,8 +41,16 @@ Pour revenir à l’état préalable, arrêter le serveur et restaurer la sauveg
 
 ## E-mails et réception restante
 
-`bun run mail status` doit indiquer une clé et un expéditeur configurés avant activation. La commande ne révèle pas les valeurs. À la fin de cette livraison : `enabled=false`, `keyConfigured=false`, `senderConfigured=false`, `autorun=false`, `ready=false`.
+`bun run mail status` indique uniquement des booléens : clé, expéditeur, activation et traitement automatique configurés. La clé fournie sous `RESEND_API` a été normalisée en `RESEND_API_KEY`, sans être affichée. Expéditeur : `my@kip-city.com`.
 
-L’utilisateur fournira la configuration Resend. Restent le domaine d’expédition vérifié, l’adresse d’expéditeur, la clé locale et un destinataire de test autorisé. Tester ensuite l’invitation, la récupération de compte et les rappels, et confirmer leur réception. Un statut d’acceptation chez Resend ne constitue pas une preuve de réception en boîte mail.
+Le 5 octobre, un e-mail unique « MyKipCity — vérification de la messagerie » a été envoyé au destinataire désigné par l’utilisateur. Resend l’a accepté et l’utilisateur a confirmé sa réception dans la boîte principale Gmail. La clé restreinte ne permet pas de consulter les domaines ; l’autorisation de cet expéditeur a été vérifiée par cet envoi réel. Les messages fictifs vers les domaines réservés `.test`, `.invalid`, `.example` ou `localhost` sont annulés avant transport.
 
-Le pilote acquéreur et son procès-verbal restent à effectuer avec le client. Les prérequis d’hébergement et d’exploitation du déploiement réel restent ceux de l’inventaire. Aucune ouverture à de vrais dossiers n’est déclarée.
+`MAIL_ENABLED=true` et `MAIL_AUTORUN=true` activent le traitement toutes les minutes pendant que le serveur Next.js tourne. Aucun planificateur externe n’est créé. Les liens utilisent encore l’adresse locale de l’application ; le pilote hébergé devra configurer son URL réelle. Les événements de délivrabilité du fournisseur ne sont pas encore raccordés : le statut « accepté » dans la file ne vaut pas preuve de réception.
+
+## Navigation mobile et bureau
+
+Le composant officiel Sheet shadcn (Radix) remplace le menu mobile affiché en permanence. Il comprend les rubriques du rôle, les notifications, le profil membre, la sécurité, le site public et la déconnexion. Les états sélectionnés n’utilisent plus de bordure colorée à gauche, sur bureau et mobile.
+
+Recette : ouverture et fermeture, navigation vers Contact avec fermeture, Échap et retour du focus au bouton, Tab depuis le dernier contrôle revenant au premier lien, aucune largeur dépassant l’écran à 390 px. Axe ne signale aucune violation ; sa vérification manuelle du focus masqué a été complétée au clavier. Le bureau conserve sa navigation latérale. Captures : [menu ouvert](mykipcity-menu-mobile-open.png), [menu fermé](mykipcity-menu-mobile-closed.png), [bureau](mykipcity-menu-desktop.png).
+
+Le pilote acquéreur et son procès-verbal restent à effectuer avec le client, notamment les scénarios de liens de compte et de rappels. Les prérequis d’hébergement et d’exploitation du déploiement réel restent ceux de l’inventaire. Aucune ouverture à de vrais dossiers n’est déclarée.
